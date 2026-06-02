@@ -23,6 +23,11 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', require('./Routes/authRoutes'));
+app.use('/api/urls', require('./Routes/urlRoutes'));
+
+// Short URL Redirect Route
+const { redirectUrl } = require('./Controller/urlController');
+app.get('/:shortCode', redirectUrl);
 
 // Health check
 app.get('/api/health', (req, res) => {

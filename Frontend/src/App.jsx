@@ -3,8 +3,7 @@ import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider } from './context/AuthContext'
 import { Toaster } from 'react-hot-toast'
 import LandingPage from './pages/LandingPage'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
+import AuthPage from './pages/AuthPage'
 import HomePage from './pages/HomePage'
 import './index.css'
 
@@ -16,8 +15,8 @@ function App() {
           <Toaster position="top-right" />
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/signup" element={<AuthPage />} />
             <Route path="/home" element={<HomePage />} />
           </Routes>
         </AuthProvider>

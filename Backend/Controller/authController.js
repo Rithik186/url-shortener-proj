@@ -296,6 +296,40 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// @desc    Update user profile
+// @route   PUT /api/auth/update-profile
+// @access  Private
+const updateProfile = async (req, res) => {
+  try {
+    const { name, avatar } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+      user.name = name || user.name;
+      if (avatar !== undefined) {
+        user.avatar = avatar; // Base64 string expected
+      }
+
+      const updatedUser = await user.save();
+
+      res.status(200).json({
+        success: true,
+        user: {
+          id: updatedUser._id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          avatar: updatedUser.avatar,
+        },
+      });
+    } else {
+      res.status(404).json({ success: false, message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ success: false, message: 'Server error during profile update' });
+  }
+};
+
 module.exports = {
   signup,
   login,
@@ -304,4 +338,5 @@ module.exports = {
   logout,
   forgotPassword,
   resetPassword,
+  updateProfile,
 };
