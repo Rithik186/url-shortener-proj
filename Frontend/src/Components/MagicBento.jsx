@@ -699,7 +699,7 @@ const MagicBento = ({
                     >
                       <div className="flex justify-between items-center text-xs mb-1.5">
                         <span className="font-bold text-primary-500 truncate max-w-[170px]">
-                          snip.link/{url.shortCode}
+                          neb.la/{url.shortCode}
                         </span>
                         <span className="font-black text-xs">{url.clicks} clicks</span>
                       </div>

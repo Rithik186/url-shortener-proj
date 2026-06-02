@@ -4,17 +4,17 @@ const ThemeContext = createContext()
 
 export const ThemeProvider = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('sniplink-theme')
+    const saved = localStorage.getItem('nebula-theme')
     return saved === 'dark'
   })
 
   useEffect(() => {
     if (isDark) {
       document.body.classList.add('dark')
-      localStorage.setItem('sniplink-theme', 'dark')
+      localStorage.setItem('nebula-theme', 'dark')
     } else {
       document.body.classList.remove('dark')
-      localStorage.setItem('sniplink-theme', 'light')
+      localStorage.setItem('nebula-theme', 'light')
     }
   }, [isDark])
 

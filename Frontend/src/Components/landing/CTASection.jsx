@@ -33,7 +33,7 @@ const CTASection = () => {
             Ready to shorten your <span className="gradient-text">first link</span>?
           </h2>
           <p className={`text-lg max-w-xl mx-auto mb-10 ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
-            Join thousands of creators, marketers, and developers who trust Sniplink to power their links.
+            Join thousands of creators, marketers, and developers who trust Nebula to power their links.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

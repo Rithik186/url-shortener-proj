@@ -39,7 +39,7 @@ const LandingPage = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <PillNav
           logo={logo}
-          logoAlt="Sniplink Logo"
+          logoAlt="Nebula Logo"
           items={navItems}
           ease="power3.easeOut"
           baseColor={isDark ? '#120F17' : '#ffffff'}

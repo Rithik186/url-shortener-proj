@@ -125,6 +125,76 @@ exports.deleteUrl = async (req, res) => {
   }
 };
 
+// @desc    Update a URL
+// @route   PUT /api/urls/:id
+// @access  Private
+exports.updateUrl = async (req, res) => {
+  try {
+    const { originalUrl, shortCode, expiresAt } = req.body;
+    const url = await Url.findById(req.params.id);
+
+    if (!url) {
+      return res.status(404).json({ success: false, message: 'URL not found' });
+    }
+
+    // Make sure user owns the URL
+    if (url.user.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ success: false, message: 'Not authorized' });
+    }
+
+    if (originalUrl) {
+      if (!isValidUrl(originalUrl)) {
+        return res.status(400).json({ success: false, message: 'Invalid URL format' });
+      }
+      url.originalUrl = originalUrl;
+    }
+
+    if (shortCode) {
+      // Validate custom alias format (alphanumeric and dashes/underscores)
+      const aliasRegex = /^[a-zA-Z0-9_-]+$/;
+      if (!aliasRegex.test(shortCode)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Short code can only contain letters, numbers, hyphens, and underscores' 
+        });
+      }
+
+      // Check if short code is already in use by another URL
+      const existing = await Url.findOne({ shortCode, _id: { $ne: url._id } });
+      if (existing) {
+        return res.status(400).json({ success: false, message: 'Short code is already in use' });
+      }
+      url.shortCode = shortCode;
+    }
+
+    // Parse expiry date if provided
+    if (expiresAt !== undefined) {
+      if (expiresAt === null || expiresAt === '') {
+        url.expiresAt = null;
+      } else {
+        const parsedExpiry = new Date(expiresAt);
+        if (isNaN(parsedExpiry.getTime())) {
+          return res.status(400).json({ success: false, message: 'Invalid expiration date format' });
+        }
+        if (parsedExpiry < new Date()) {
+          return res.status(400).json({ success: false, message: 'Expiration date must be in the future' });
+        }
+        url.expiresAt = parsedExpiry;
+      }
+    }
+
+    await url.save();
+
+    res.status(200).json({
+      success: true,
+      url,
+    });
+  } catch (error) {
+    console.error('Error updating URL:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // @desc    Redirect short code to original URL
 // @route   GET /:shortCode
 // @access  Public
@@ -141,7 +211,7 @@ exports.redirectUrl = async (req, res) => {
           <body style="font-family: sans-serif; text-align: center; padding: 50px;">
             <h1>404 - Link Not Found</h1>
             <p>The shortened link you are trying to access does not exist.</p>
-            <a href="/">Go to Sniplink</a>
+            <a href="/">Go to Nebula</a>
           </body>
         </html>
       `);
@@ -155,7 +225,7 @@ exports.redirectUrl = async (req, res) => {
           <body style="font-family: sans-serif; text-align: center; padding: 50px;">
             <h1>Link Expired</h1>
             <p>This shortened link has expired and is no longer available.</p>
-            <a href="/">Go to Sniplink</a>
+            <a href="/">Go to Nebula</a>
           </body>
         </html>
       `);

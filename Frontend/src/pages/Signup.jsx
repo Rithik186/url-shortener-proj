@@ -110,7 +110,7 @@ const Signup = () => {
             <Link2 size={20} className="text-white" />
           </div>
           <span className={`text-2xl font-bold font-[family-name:var(--font-display)] tracking-tight ${isDark ? 'text-white' : 'text-surface-900'}`}>
-            Snip<span className="gradient-text">link</span>
+            Nebu<span className="gradient-text">la</span>
           </span>
         </Link>
 

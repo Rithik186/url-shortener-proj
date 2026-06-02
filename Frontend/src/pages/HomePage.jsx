@@ -5,7 +5,7 @@ import {
   Link2, Copy, Trash2, Moon, Sun, User, Settings, LogOut, Loader2, 
   Link as LinkIcon, Camera, X, ArrowRight, Menu, BarChart3, QrCode, 
   Plus, Check, ExternalLink, TrendingUp, Download, Search, ChevronRight,
-  Clock, Calendar, Sparkles, History, ArrowLeft, Share2, Eye, Globe
+  Clock, Calendar, Sparkles, History, ArrowLeft, Share2, Eye, Globe, Pencil
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useNavigate, Link } from 'react-router-dom'
@@ -48,7 +48,7 @@ const HomePage = () => {
   // Data States
   const [urls, setUrls] = useState(() => {
     try {
-      const cached = localStorage.getItem('sniplink-cached-urls')
+      const cached = localStorage.getItem('nebula-cached-urls')
       return cached ? JSON.parse(cached) : []
     } catch (e) {
       return []
@@ -56,7 +56,7 @@ const HomePage = () => {
   })
   const [loadingUrls, setLoadingUrls] = useState(() => {
     try {
-      const cached = localStorage.getItem('sniplink-cached-urls')
+      const cached = localStorage.getItem('nebula-cached-urls')
       return cached ? JSON.parse(cached).length === 0 : true
     } catch (e) {
       return true
@@ -82,6 +82,13 @@ const HomePage = () => {
   const [csvFile, setCsvFile] = useState(null)
   const [csvShorteningProgress, setCsvShorteningProgress] = useState(null)
   const [isCsvShortening, setIsCsvShortening] = useState(false)
+
+  // Edit States
+  const [selectedUrlForEdit, setSelectedUrlForEdit] = useState(null)
+  const [editOriginalUrl, setEditOriginalUrl] = useState('')
+  const [editCustomAlias, setEditCustomAlias] = useState('')
+  const [editExpiresAt, setEditExpiresAt] = useState('')
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
 
   useEffect(() => {
     if (selectedQrUrl) {
@@ -137,7 +144,7 @@ const HomePage = () => {
 
   const fetchUrls = async () => {
     try {
-      const token = localStorage.getItem('sniplink-token')
+      const token = localStorage.getItem('nebula-token')
       const response = await fetch('http://127.0.0.1:5000/api/urls', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -148,7 +155,7 @@ const HomePage = () => {
       const data = await response.json()
       if (data.success) {
         setUrls(data.urls)
-        localStorage.setItem('sniplink-cached-urls', JSON.stringify(data.urls))
+        localStorage.setItem('nebula-cached-urls', JSON.stringify(data.urls))
         
         // Update selected analytics URL details if one is selected
         if (selectedUrlForAnalytics) {
@@ -234,7 +241,7 @@ const HomePage = () => {
 
         setCsvShorteningProgress({ total: rows.length, current: 0, successes: 0, failures: 0 })
 
-        const token = localStorage.getItem('sniplink-token')
+        const token = localStorage.getItem('nebula-token')
         let successes = 0
         let failures = 0
         const newUrls = []
@@ -287,7 +294,7 @@ const HomePage = () => {
     if (!originalUrl) return
     setIsShortening(true)
     try {
-      const token = localStorage.getItem('sniplink-token')
+      const token = localStorage.getItem('nebula-token')
       const response = await fetch('http://127.0.0.1:5000/api/urls/shorten', {
         method: 'POST',
         headers: { 
@@ -312,7 +319,7 @@ const HomePage = () => {
         setExpiresAt('')
         const updatedUrls = [data.url, ...urls]
         setUrls(updatedUrls)
-        localStorage.setItem('sniplink-cached-urls', JSON.stringify(updatedUrls))
+        localStorage.setItem('nebula-cached-urls', JSON.stringify(updatedUrls))
         setQrText(`http://127.0.0.1:5000/${data.url.shortCode}`)
         setShowAdvanced(false)
       } else {
@@ -328,7 +335,7 @@ const HomePage = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this link?')) return
     try {
-      const token = localStorage.getItem('sniplink-token')
+      const token = localStorage.getItem('nebula-token')
       const response = await fetch(`http://127.0.0.1:5000/api/urls/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -341,7 +348,7 @@ const HomePage = () => {
         toast.success('Link deleted')
         const updatedUrls = urls.filter(url => url._id !== id)
         setUrls(updatedUrls)
-        localStorage.setItem('sniplink-cached-urls', JSON.stringify(updatedUrls))
+        localStorage.setItem('nebula-cached-urls', JSON.stringify(updatedUrls))
         if (selectedUrlForAnalytics?._id === id) {
           setSelectedUrlForAnalytics(null)
         }
@@ -359,10 +366,67 @@ const HomePage = () => {
     setTimeout(() => setCopiedId(null), 2000)
   }
 
+  const handleEditClick = (url) => {
+    setSelectedUrlForEdit(url)
+    setEditOriginalUrl(url.originalUrl)
+    setEditCustomAlias(url.shortCode)
+    if (url.expiresAt) {
+      const d = new Date(url.expiresAt)
+      const offset = d.getTimezoneOffset()
+      const localDate = new Date(d.getTime() - (offset * 60 * 1000))
+      setEditExpiresAt(localDate.toISOString().slice(0, 16))
+    } else {
+      setEditExpiresAt('')
+    }
+  }
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault()
+    if (!selectedUrlForEdit) return
+    setIsSavingEdit(true)
+    try {
+      const token = localStorage.getItem('nebula-token')
+      const response = await fetch(`http://127.0.0.1:5000/api/urls/${selectedUrlForEdit._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          originalUrl: editOriginalUrl,
+          shortCode: editCustomAlias || undefined,
+          expiresAt: editExpiresAt || null
+        })
+      })
+      if (response.status === 401) {
+        logout()
+        return
+      }
+      const data = await response.json()
+      if (response.ok && data.success) {
+        toast.success('Link updated successfully!')
+        const updatedUrls = urls.map(u => u._id === selectedUrlForEdit._id ? data.url : u)
+        setUrls(updatedUrls)
+        localStorage.setItem('nebula-cached-urls', JSON.stringify(updatedUrls))
+        
+        if (selectedUrlForAnalytics?._id === selectedUrlForEdit._id) {
+          setSelectedUrlForAnalytics(data.url)
+        }
+        setSelectedUrlForEdit(null)
+      } else {
+        toast.error(data.message || 'Failed to update link')
+      }
+    } catch (error) {
+      toast.error('Server error')
+    } finally {
+      setIsSavingEdit(false)
+    }
+  }
+
   const handleSystemShare = (url) => {
     if (navigator.share) {
       navigator.share({
-        title: 'SnipLink',
+        title: 'Nebula',
         text: 'Check out this shortened link!',
         url: url
       }).catch(err => console.log('Error sharing:', err));
@@ -396,7 +460,7 @@ const HomePage = () => {
     e.preventDefault()
     setIsUpdatingProfile(true)
     try {
-      const token = localStorage.getItem('sniplink-token')
+      const token = localStorage.getItem('nebula-token')
       const response = await fetch('http://127.0.0.1:5000/api/auth/update-profile', {
         method: 'PUT',
         headers: { 
@@ -432,7 +496,7 @@ const HomePage = () => {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'sniplink-qr.png'
+      a.download = 'nebula-qr.png'
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -574,7 +638,7 @@ const HomePage = () => {
               <Link2 size={20} className="text-white" />
             </div>
             <span className="font-bold font-[family-name:var(--font-display)] text-2xl tracking-tight">
-              Snip<span className="gradient-text">link</span>
+              Nebu<span className="gradient-text">la</span>
             </span>
           </div>
           <button 
@@ -707,7 +771,7 @@ const HomePage = () => {
                 <Link2 size={18} className="text-white" />
               </div>
               <span className="font-bold font-[family-name:var(--font-display)] text-2xl tracking-tight">
-                Snip<span className="gradient-text">link</span>
+                Nebu<span className="gradient-text">la</span>
               </span>
             </div>
           </div>
@@ -793,9 +857,9 @@ const HomePage = () => {
                       isDark ? 'bg-[#0a0712]/60 border-[#251e3f]' : 'bg-slate-50/50 border-slate-200 shadow-inner'
                     }`}>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* Custom Slug Input */}
+                        {/* Custom Alias Input */}
                         <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase font-bold tracking-wider opacity-85">Custom Alias (Slug)</label>
+                          <label className="text-[10px] uppercase font-bold tracking-wider opacity-85">Custom Alias</label>
                           <div className={`relative flex items-center rounded-xl border transition-colors duration-305 ${
                             isDark ? 'bg-[#0d091a] border-[#221c3b] focus-within:border-primary-500' : 'bg-white border-slate-200 focus-within:border-primary-500'
                           }`}>
@@ -804,7 +868,7 @@ const HomePage = () => {
                               type="text"
                               value={customAlias}
                               onChange={(e) => setCustomAlias(e.target.value)}
-                              placeholder="my-custom-slug"
+                              placeholder="my-custom-alias"
                               className={`w-full bg-transparent border-none outline-none py-2.5 pl-7 pr-4 text-xs transition-colors duration-300 ${
                                 isDark ? 'text-white' : 'text-surface-900'
                               }`}
@@ -878,7 +942,7 @@ const HomePage = () => {
                                     rel="noreferrer"
                                     className="font-bold text-base text-primary-500 hover:text-primary-400 no-underline inline-flex items-center gap-1"
                                   >
-                                    snip.link/{url.shortCode}
+                                    neb.la/{url.shortCode}
                                     <ExternalLink size={12} className="opacity-75" />
                                   </a>
                                   
@@ -971,6 +1035,16 @@ const HomePage = () => {
                                   title="View Analytics"
                                 >
                                   <BarChart3 size={14} />
+                                </button>
+                                
+                                <button 
+                                  onClick={() => handleEditClick(url)}
+                                  className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
+                                    isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-900'
+                                  }`}
+                                  title="Edit URL"
+                                >
+                                  <Pencil size={14} />
                                 </button>
                                 
                                 <button 
@@ -1176,7 +1250,7 @@ const HomePage = () => {
                                   rel="noreferrer"
                                   className="font-bold text-base text-primary-500 hover:text-primary-400 no-underline inline-flex items-center gap-1"
                                 >
-                                  snip.link/{url.shortCode}
+                                  neb.la/{url.shortCode}
                                   <ExternalLink size={12} className="opacity-75" />
                                 </a>
                                 
@@ -1271,6 +1345,16 @@ const HomePage = () => {
                                 <BarChart3 size={14} />
                               </button>
                               
+                              <button 
+                                onClick={() => handleEditClick(url)}
+                                className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
+                                  isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-900'
+                                }`}
+                                title="Edit URL"
+                              >
+                                <Pencil size={14} />
+                              </button>
+
                               <button 
                                 onClick={() => handleDelete(url._id)}
                                 className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
@@ -1392,7 +1476,7 @@ const HomePage = () => {
                                 rel="noreferrer"
                                 className="text-2xl font-black text-primary-500 hover:underline inline-flex items-center gap-1.5"
                               >
-                                snip.link/{selectedUrlForAnalytics.shortCode}
+                                neb.la/{selectedUrlForAnalytics.shortCode}
                                 <ExternalLink size={14} />
                               </a>
                             </div>
@@ -1750,7 +1834,7 @@ const HomePage = () => {
                             <QrCode size={20} />
                           </div>
                           <div className="truncate flex-1">
-                            <h4 className="font-bold text-base truncate">snip.link/{url.shortCode}</h4>
+                            <h4 className="font-bold text-base truncate">neb.la/{url.shortCode}</h4>
                             <p className={`text-xs truncate opacity-75 ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
                               {url.originalUrl}
                             </p>
@@ -1922,7 +2006,7 @@ const HomePage = () => {
               <div className="text-center space-y-1 w-full">
                 <span className="text-[10px] uppercase tracking-widest font-black text-primary-500">Scan QR Code</span>
                 <h3 className="text-2xl font-black font-[family-name:var(--font-display)] truncate px-4">
-                  snip.link/{selectedQrUrl.shortCode}
+                  neb.la/{selectedQrUrl.shortCode}
                 </h3>
                 <p className="text-xs truncate opacity-60 max-w-[280px] mx-auto">
                   {selectedQrUrl.originalUrl}
@@ -1990,7 +2074,7 @@ const HomePage = () => {
               <div className="space-y-1">
                 <h3 className="font-bold text-lg">Confirm Logout</h3>
                 <p className={`text-xs ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
-                  Are you sure you want to log out of your SnipLink account?
+                  Are you sure you want to log out of your Nebula account?
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3 w-full pt-2">
@@ -2013,6 +2097,108 @@ const HomePage = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit URL Modal */}
+      {selectedUrlForEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            onClick={() => setSelectedUrlForEdit(null)}
+            className="absolute inset-0 bg-surface-950/45 backdrop-blur-md animate-in fade-in duration-200"
+          />
+          <div className={`relative w-full max-w-md p-6 md:p-8 rounded-3xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 border ${
+            isDark ? 'bg-surface-900 border-surface-800 text-white' : 'bg-white border border-surface-150 text-surface-950'
+          }`}>
+            {/* Close button */}
+            <button 
+              onClick={() => setSelectedUrlForEdit(null)}
+              className={`absolute top-4 right-4 p-2 rounded-full transition-all border-none cursor-pointer ${
+                isDark ? 'bg-surface-850 hover:bg-surface-800 text-surface-400 hover:text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-500 hover:text-surface-900'
+              }`}
+            >
+              <X size={16} />
+            </button>
+
+            <h3 className="text-xl font-bold mb-5 font-[family-name:var(--font-display)]">Edit Shortlink</h3>
+            
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              <div>
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Destination URL</label>
+                <div className={`relative flex items-center rounded-xl border transition-colors ${
+                  isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
+                }`}>
+                  <LinkIcon size={16} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                  <input
+                    type="url"
+                    value={editOriginalUrl}
+                    onChange={(e) => setEditOriginalUrl(e.target.value)}
+                    required
+                    placeholder="https://example.com/very-long-url"
+                    className={`w-full bg-transparent border-none outline-none py-3 pl-11 pr-4 text-xs ${isDark ? 'text-white' : 'text-surface-900'}`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Custom Alias</label>
+                <div className={`relative flex items-center rounded-xl border transition-colors ${
+                  isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
+                }`}>
+                  <span className={`absolute left-4 text-xs font-semibold ${isDark ? 'text-surface-500' : 'text-surface-400'}`}>/</span>
+                  <input
+                    type="text"
+                    value={editCustomAlias}
+                    onChange={(e) => setEditCustomAlias(e.target.value)}
+                    placeholder="my-custom-alias"
+                    className={`w-full bg-transparent border-none outline-none py-3 pl-8 pr-4 text-xs ${isDark ? 'text-white' : 'text-surface-900'}`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Expiration Date</label>
+                <div className={`relative flex items-center rounded-xl border transition-colors ${
+                  isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
+                }`}>
+                  <Calendar size={16} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                  <input
+                    type="datetime-local"
+                    value={editExpiresAt}
+                    onChange={(e) => setEditExpiresAt(e.target.value)}
+                    className={`w-full bg-transparent border-none outline-none py-3 pl-11 pr-4 text-xs ${isDark ? 'text-white' : 'text-surface-900'}`}
+                  />
+                </div>
+                <p className={`text-[10px] mt-1.5 ${isDark ? 'text-surface-500' : 'text-surface-400'}`}>Leave blank to keep the link permanent.</p>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setSelectedUrlForEdit(null)}
+                  className={`py-2.5 px-4 rounded-xl text-xs font-bold border cursor-pointer transition-all ${
+                    isDark ? 'bg-surface-800 hover:bg-surface-750 border-surface-700 text-surface-200' : 'bg-white hover:bg-surface-100 border-surface-200 text-surface-700'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSavingEdit}
+                  className="py-2.5 px-5 rounded-xl bg-primary-600 hover:bg-primary-500 disabled:opacity-75 disabled:cursor-not-allowed text-white text-xs font-bold border-none cursor-pointer transition-all shadow-md shadow-primary-600/10 flex items-center gap-1.5"
+                >
+                  {isSavingEdit ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

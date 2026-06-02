@@ -36,7 +36,7 @@ const Footer = () => {
                 <Link2 size={18} className="text-white" />
               </div>
               <span className={`text-xl font-bold font-[family-name:var(--font-display)] tracking-tight ${isDark ? 'text-white' : 'text-surface-900'}`}>
-                Snip<span className="gradient-text">link</span>
+                Nebu<span className="gradient-text">la</span>
               </span>
             </div>
             <p className={`text-sm leading-relaxed mb-6 ${isDark ? 'text-surface-500' : 'text-surface-500'}`}>
@@ -79,7 +79,7 @@ const Footer = () => {
         <div className={`mt-12 pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4 ${
           isDark ? 'border-surface-800/50' : 'border-surface-200'
         }`}>
-          <p className={`text-xs ${isDark ? 'text-surface-600' : 'text-surface-400'}`}>&copy; {new Date().getFullYear()} Sniplink. All rights reserved.</p>
+          <p className={`text-xs ${isDark ? 'text-surface-600' : 'text-surface-400'}`}>&copy; {new Date().getFullYear()} Nebula. All rights reserved.</p>
           <p className={`text-xs ${isDark ? 'text-surface-700' : 'text-surface-300'}`}>Built with ❤️ for developers</p>
         </div>
       </div>

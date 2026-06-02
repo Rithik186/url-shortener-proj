@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user exists in local storage on load
-    const storedUser = localStorage.getItem('sniplink-user')
+    const storedUser = localStorage.getItem('nebula-user')
     if (storedUser) {
       setUser(JSON.parse(storedUser))
       setIsAuthenticated(true)
@@ -24,22 +24,22 @@ export const AuthProvider = ({ children }) => {
   const login = (userData, token) => {
     setUser(userData)
     setIsAuthenticated(true)
-    localStorage.setItem('sniplink-user', JSON.stringify(userData))
-    if (token) localStorage.setItem('sniplink-token', token)
+    localStorage.setItem('nebula-user', JSON.stringify(userData))
+    if (token) localStorage.setItem('nebula-token', token)
     toast.success('Login successful! Welcome back.')
     navigate('/home')
   }
 
   const updateUser = (userData) => {
     setUser(userData)
-    localStorage.setItem('sniplink-user', JSON.stringify(userData))
+    localStorage.setItem('nebula-user', JSON.stringify(userData))
   }
 
   const logout = () => {
     setUser(null)
     setIsAuthenticated(false)
-    localStorage.removeItem('sniplink-user')
-    localStorage.removeItem('sniplink-token')
+    localStorage.removeItem('nebula-user')
+    localStorage.removeItem('nebula-token')
     toast.success('Logged out successfully.')
     navigate('/login')
   }

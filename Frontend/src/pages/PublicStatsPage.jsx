@@ -68,7 +68,7 @@ const PublicStatsPage = () => {
           <h2 className="text-xl font-bold">Link Not Found</h2>
           <p className="text-sm opacity-80">The statistics for shortcode "{shortCode}" could not be retrieved. It may have been deleted or the code is incorrect.</p>
           <Link to="/" className="inline-block px-6 py-2.5 bg-primary-600 text-white rounded-xl text-xs font-bold no-underline">
-            Go to Sniplink
+            Go to Nebula
           </Link>
         </div>
       </div>
@@ -113,7 +113,7 @@ const PublicStatsPage = () => {
       }`}>
         <div className="flex items-center gap-2">
           <BarChart3 className="text-primary-500" size={24} />
-          <span className="font-extrabold text-lg font-[family-name:var(--font-display)]">snip.link / Public Stats</span>
+          <span className="font-extrabold text-lg font-[family-name:var(--font-display)]">neb.la / Public Stats</span>
         </div>
         <Link to="/" className="text-xs font-bold text-primary-500 hover:underline no-underline">
           Create Your Own Link &rarr;
@@ -129,7 +129,7 @@ const PublicStatsPage = () => {
             <div className="space-y-2 min-w-0">
               <span className="text-[10px] uppercase font-bold tracking-widest text-primary-500">Public Live Dashboard</span>
               <h1 className="text-2xl md:text-3xl font-black font-[family-name:var(--font-display)] truncate">
-                snip.link/{stats.shortCode}
+                neb.la/{stats.shortCode}
               </h1>
               <p className="text-xs break-all opacity-75 max-w-2xl">
                 Destination: <a href={stats.originalUrl} target="_blank" rel="noreferrer" className="text-primary-500 hover:underline">{stats.originalUrl}</a>

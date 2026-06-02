@@ -43,7 +43,7 @@ const Navbar = () => {
               <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-primary-400 to-accent-500 opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-300" />
             </div>
             <span className={`text-xl font-bold font-[family-name:var(--font-display)] tracking-tight ${isDark ? 'text-white' : 'text-surface-900'}`}>
-              Snip<span className="gradient-text">link</span>
+              Nebu<span className="gradient-text">la</span>
             </span>
           </Link>
 

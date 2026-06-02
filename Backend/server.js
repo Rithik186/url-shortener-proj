@@ -38,7 +38,7 @@ app.get('/:shortCode', redirectUrl);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'OK', message: 'Sniplink API is running' });
+  res.status(200).json({ status: 'OK', message: 'Nebula API is running' });
 });
 
 // 404 handler
@@ -54,5 +54,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Sniplink API running on port ${PORT}`);
+  console.log(`🚀 Nebula API running on port ${PORT}`);
 });
