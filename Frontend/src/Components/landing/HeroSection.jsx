@@ -1,10 +1,8 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, Link2 } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 
 const HeroSection = () => {
-  const [url, setUrl] = useState('')
   const { isDark } = useTheme()
 
   return (
@@ -52,42 +50,30 @@ const HeroSection = () => {
           analyze your audience, and grow your reach — all from one beautiful dashboard.
         </motion.p>
 
-        {/* URL Input */}
+        {/* CTA Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
-          className="max-w-2xl mx-auto"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/20 via-accent-500/20 to-primary-500/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className={`relative flex items-center backdrop-blur-xl border rounded-2xl p-2 transition-all duration-300 ${
+          <a
+            href="/signup"
+            className="bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-semibold px-8 py-4 rounded-xl flex items-center gap-2 shadow-xl shadow-primary-500/25 hover:shadow-primary-500/40 hover:-translate-y-0.5 transition-all duration-300 no-underline text-base"
+          >
+            Get Started Free
+            <ArrowRight size={18} />
+          </a>
+          <a
+            href="#features"
+            className={`font-medium px-8 py-4 rounded-xl border transition-all duration-300 no-underline text-base ${
               isDark
-                ? 'bg-surface-900/80 border-surface-700/50 focus-within:border-primary-500/40 shadow-2xl shadow-black/20'
-                : 'bg-white border-surface-200 focus-within:border-primary-400 shadow-xl shadow-surface-200/50'
-            }`}>
-              <Link2 size={20} className={`ml-4 mr-2 shrink-0 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
-              <input
-                id="hero-url-input"
-                type="url"
-                placeholder="Paste your long URL here..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className={`flex-1 bg-transparent border-none outline-none py-3 px-2 text-base font-medium ${
-                  isDark
-                    ? 'text-white placeholder-surface-600'
-                    : 'text-surface-900 placeholder-surface-400'
-                }`}
-              />
-              <button
-                id="hero-shorten-btn"
-                className="shrink-0 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-semibold px-6 py-3 rounded-xl flex items-center gap-2 transition-all duration-300 hover:shadow-lg hover:shadow-primary-500/25 border-none cursor-pointer text-sm"
-              >
-                Shorten
-                <ArrowRight size={16} />
-              </button>
-            </div>
-          </div>
+                ? 'text-surface-400 hover:text-white border-surface-700/50 hover:border-primary-500/30'
+                : 'text-surface-500 hover:text-surface-900 border-surface-200 hover:border-primary-300'
+            }`}
+          >
+            View Features
+          </a>
         </motion.div>
       </div>
 
