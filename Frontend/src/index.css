@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ========================================
    SNIPLINK — Design System & Global Styles
    ======================================== */
@@ -67,8 +69,8 @@ body {
    ======================================== */
 
 body {
-  background-color: #ffffff;
-  color: #334155;
+  background-color: #faf5ff;
+  color: #1e1b4b;
 }
 
 /* ========================================
@@ -76,8 +78,22 @@ body {
    ======================================== */
 
 body.dark {
-  background-color: #020617;
-  color: #cbd5e1;
+  background-color: #06040b;
+  color: #e2e8f0;
+}
+
+.dark {
+  --color-surface-50: #0a0712;
+  --color-surface-100: #120f22;
+  --color-surface-200: #231c3d;
+  --color-surface-300: #382d62;
+  --color-surface-400: #a5b4fc;
+  --color-surface-500: #818cf8;
+  --color-surface-600: #6366f1;
+  --color-surface-700: #2d254e;
+  --color-surface-800: #18132e;
+  --color-surface-900: #0d091a;
+  --color-surface-950: #06040b;
 }
 
 /* ========================================
@@ -117,14 +133,28 @@ body.dark {
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 40%, #7c3aed 70%, #10b981 100%);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark .gradient-text {
+  background: linear-gradient(135deg, #a5b4fc 0%, #c084fc 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .gradient-text-accent {
-  background: linear-gradient(135deg, #10b981 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #10b981 0%, #4f46e5 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dark .gradient-text-accent {
+  background: linear-gradient(135deg, #34d399 0%, #a5b4fc 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

@@ -6,7 +6,7 @@ const HeroSection = () => {
   const { isDark } = useTheme()
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div className={`absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-[pulse-glow_6s_ease-in-out_infinite] ${
@@ -32,9 +32,9 @@ const HeroSection = () => {
             isDark ? 'text-white' : 'text-surface-900'
           }`}
         >
-          Shorten. Track.
+          Smarter Links,
           <br />
-          <span className="gradient-text">Dominate.</span>
+          <span className="gradient-text">Better Clicks.</span>
         </motion.h1>
 
         {/* Subheading */}

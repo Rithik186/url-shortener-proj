@@ -11,6 +11,7 @@ import toast from 'react-hot-toast'
 import { useNavigate, Link } from 'react-router-dom'
 import QRCode from 'qrcode'
 import MagicBento from '../Components/MagicBento'
+import Dock from '../Components/Dock'
 
 const WhatsAppIcon = ({ size = 16, className = '' }) => (
   <svg 
@@ -35,6 +36,7 @@ const HomePage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [copiedId, setCopiedId] = useState(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const shortenerInputRef = useRef(null)
   
   // Create Link Form States
@@ -510,18 +512,51 @@ const HomePage = () => {
     )
   }
 
+  const dockItems = [
+    { 
+      icon: <Sparkles size={20} />, 
+      label: 'Overview', 
+      onClick: () => setActiveTab('dashboard') 
+    },
+    { 
+      icon: <Link2 size={20} />, 
+      label: 'Links', 
+      onClick: () => setActiveTab('links') 
+    },
+    { 
+      icon: <BarChart3 size={20} />, 
+      label: 'Analytics', 
+      onClick: () => { setSelectedUrlForAnalytics(null); setActiveTab('analytics'); } 
+    },
+    { 
+      icon: <Settings size={20} />, 
+      label: 'Settings', 
+      onClick: () => setActiveTab('settings') 
+    },
+    { 
+      icon: isDark ? <Sun size={20} /> : <Moon size={20} />, 
+      label: isDark ? 'Light Mode' : 'Dark Mode', 
+      onClick: toggleTheme 
+    },
+    { 
+      icon: <LogOut size={20} className="text-red-500" />, 
+      label: 'Logout', 
+      onClick: () => setShowLogoutConfirm(true) 
+    }
+  ]
+
   return (
     <div className={`min-h-screen flex transition-colors duration-300 ${isDark ? 'bg-surface-950 text-white' : 'bg-surface-50 text-surface-900'}`}>
       
       {/* Sliding Sidebar Menu & Backdrop (Triggerable on Desktop & Mobile) */}
       <div 
         onClick={() => setSidebarOpen(false)}
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-350 ${
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-350 md:hidden ${
           sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       />
 
-      <aside className={`fixed top-0 bottom-0 left-0 z-50 w-72 border-r flex flex-col transition-transform duration-350 ease-out shadow-2xl ${
+      <aside className={`fixed top-0 bottom-0 left-0 z-50 w-72 border-r flex flex-col transition-transform duration-350 ease-out shadow-2xl md:hidden ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } ${
         isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200'
@@ -630,7 +665,10 @@ const HomePage = () => {
           </button>
 
           <button
-            onClick={logout}
+            onClick={() => {
+              setSidebarOpen(false);
+              setShowLogoutConfirm(true);
+            }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all border-none cursor-pointer text-left ${
               isDark ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'
             }`}
@@ -651,15 +689,21 @@ const HomePage = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className={`p-2.5 rounded-xl border-none cursor-pointer transition-all ${
-                isDark ? 'bg-surface-800 hover:bg-surface-700 text-white animate-pulse' : 'bg-white hover:bg-surface-100 text-surface-900 shadow-sm'
+              className={`p-2.5 rounded-xl border-none cursor-pointer transition-all md:hidden ${
+                isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-white hover:bg-surface-100 text-surface-900 shadow-sm'
               }`}
             >
               <Menu size={20} />
             </button>
-            <span className="font-bold font-[family-name:var(--font-display)] text-2xl tracking-tight lg:block hidden">
-              Snip<span className="gradient-text">link</span>
-            </span>
+            
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] flex items-center justify-center shadow-lg">
+                <Link2 size={18} className="text-white" />
+              </div>
+              <span className="font-bold font-[family-name:var(--font-display)] text-2xl tracking-tight">
+                Snip<span className="gradient-text">link</span>
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -667,17 +711,17 @@ const HomePage = () => {
         </header>
 
         {/* Content Container */}
-        <main className="flex-1 p-6 md:p-8 max-w-5xl w-full mx-auto">
+        <main className="flex-1 p-6 md:p-8 md:pb-12 max-w-5xl w-full mx-auto">
           
           {/* TAB 1: DASHBOARD OVERVIEW (SHOWS ALL SHORTENED LINKS BY DEFAULT) */}
           {activeTab === 'dashboard' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
               
               {/* URL Shortener Centerpiece */}
-              <div className={`p-8 rounded-3xl border text-center space-y-6 max-w-3xl mx-auto shadow-xl relative overflow-hidden ${
+              <div className={`p-8 rounded-3xl border text-center space-y-6 max-w-3xl mx-auto shadow-xl relative overflow-hidden transition-all duration-300 ${
                 isDark 
-                  ? 'bg-surface-900 border-surface-800' 
-                  : 'bg-white border-surface-200'
+                  ? 'bg-[#120f22]/60 backdrop-blur-md border-[#231c3d]/50 shadow-[0_20px_40px_rgba(0,0,0,0.3)]' 
+                  : 'bg-white/70 backdrop-blur-md border-indigo-100/50 shadow-[0_20px_40px_-15px_rgba(99,102,241,0.06)]'
               }`}>
                 {/* Background ambient glow */}
                 <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -693,8 +737,10 @@ const HomePage = () => {
                 </div>
 
                 <form onSubmit={handleShorten} className="space-y-4 relative z-10">
-                  <div className={`flex flex-col sm:flex-row items-stretch gap-2.5 p-2 rounded-2xl border transition-all ${
-                    isDark ? 'bg-surface-950 border-surface-800 focus-within:border-primary-500' : 'bg-surface-50 border-surface-200 focus-within:border-primary-500'
+                  <div className={`flex flex-col sm:flex-row items-stretch gap-2.5 p-2 rounded-2xl border transition-all duration-300 ${
+                    isDark 
+                      ? 'bg-[#0a0712]/80 border-[#251e3f] focus-within:border-primary-500/50' 
+                      : 'bg-white border-slate-200 focus-within:border-primary-500/60'
                   }`}>
                     <div className="flex-1 relative flex items-center">
                       <LinkIcon size={18} className={`absolute left-3.5 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
@@ -705,7 +751,7 @@ const HomePage = () => {
                         onChange={(e) => setOriginalUrl(e.target.value)}
                         placeholder="Paste a long link (e.g. https://example.com/very-long-path)..."
                         required
-                        className={`w-full bg-transparent border-none outline-none py-3.5 pl-11 pr-4 text-sm ${
+                        className={`w-full bg-transparent border-none outline-none py-3.5 pl-11 pr-4 text-sm transition-colors duration-300 ${
                           isDark ? 'text-white' : 'text-surface-900'
                         }`}
                       />
@@ -714,7 +760,7 @@ const HomePage = () => {
                     <button
                       type="submit"
                       disabled={isShortening}
-                      className="px-6 py-3.5 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 active:scale-[0.98] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all border-none cursor-pointer shadow-lg shadow-primary-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 border-none cursor-pointer shadow-lg shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {isShortening ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
                       <span>Shorten URL</span>
@@ -726,7 +772,7 @@ const HomePage = () => {
                     <button
                       type="button"
                       onClick={() => setShowAdvanced(!showAdvanced)}
-                      className={`text-xs font-bold flex items-center gap-1.5 bg-transparent border-none cursor-pointer hover:underline ${
+                      className={`text-xs font-bold flex items-center gap-1.5 bg-transparent border-none cursor-pointer transition-colors duration-300 ${
                         isDark ? 'text-surface-400 hover:text-white' : 'text-surface-500 hover:text-surface-900'
                       }`}
                     >
@@ -737,15 +783,15 @@ const HomePage = () => {
 
                   {/* Advanced Options Content */}
                   {showAdvanced && (
-                    <div className={`p-5 rounded-2xl border text-left space-y-4 animate-in fade-in slide-in-from-top-2 duration-200 ${
-                      isDark ? 'bg-surface-950/60 border-surface-800/80' : 'bg-white border-surface-150 shadow-inner'
+                    <div className={`p-5 rounded-2xl border text-left space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 ${
+                      isDark ? 'bg-[#0a0712]/60 border-[#251e3f]' : 'bg-slate-50/50 border-slate-200 shadow-inner'
                     }`}>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Custom Slug Input */}
                         <div className="space-y-1.5">
                           <label className="text-[10px] uppercase font-bold tracking-wider opacity-85">Custom Alias (Slug)</label>
-                          <div className={`relative flex items-center rounded-xl border transition-colors ${
-                            isDark ? 'bg-surface-900 border-surface-750 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
+                          <div className={`relative flex items-center rounded-xl border transition-colors duration-305 ${
+                            isDark ? 'bg-[#0d091a] border-[#221c3b] focus-within:border-primary-500' : 'bg-white border-slate-200 focus-within:border-primary-500'
                           }`}>
                             <span className={`absolute left-3.5 text-xs font-semibold ${isDark ? 'text-surface-500' : 'text-surface-400'}`}>/</span>
                             <input 
@@ -753,7 +799,7 @@ const HomePage = () => {
                               value={customAlias}
                               onChange={(e) => setCustomAlias(e.target.value)}
                               placeholder="my-custom-slug"
-                              className={`w-full bg-transparent border-none outline-none py-2.5 pl-7 pr-4 text-xs ${
+                              className={`w-full bg-transparent border-none outline-none py-2.5 pl-7 pr-4 text-xs transition-colors duration-300 ${
                                 isDark ? 'text-white' : 'text-surface-900'
                               }`}
                             />
@@ -763,15 +809,15 @@ const HomePage = () => {
                         {/* Expiration Input */}
                         <div className="space-y-1.5">
                           <label className="text-[10px] uppercase font-bold tracking-wider opacity-85">Expiration Date</label>
-                          <div className={`relative flex items-center rounded-xl border transition-colors ${
-                            isDark ? 'bg-surface-900 border-surface-750 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
+                          <div className={`relative flex items-center rounded-xl border transition-colors duration-305 ${
+                            isDark ? 'bg-[#0d091a] border-[#221c3b] focus-within:border-primary-500' : 'bg-white border-slate-200 focus-within:border-primary-500'
                           }`}>
                             <Calendar size={14} className={`absolute left-3.5 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
                             <input 
                               type="datetime-local"
                               value={expiresAt}
                               onChange={(e) => setExpiresAt(e.target.value)}
-                              className={`w-full bg-transparent border-none outline-none py-2.5 pl-9 pr-4 text-xs ${
+                              className={`w-full bg-transparent border-none outline-none py-2.5 pl-9 pr-4 text-xs transition-colors duration-300 ${
                                 isDark ? 'text-white' : 'text-surface-900'
                               }`}
                             />
@@ -1834,6 +1880,11 @@ const HomePage = () => {
           )}
 
         </main>
+
+        {/* Sticky Desktop Dock Navigation Bar (Separate space, no overlap) */}
+        <div className="hidden md:flex justify-center items-center w-full py-5 mt-auto border-t backdrop-blur-md bg-white/80 dark:bg-[#06040b]/80 border-slate-200/60 dark:border-[#18132e]/60 z-40 sticky bottom-0">
+          <Dock items={dockItems} />
+        </div>
       </div>
 
 
@@ -1911,6 +1962,49 @@ const HomePage = () => {
                     Share Link
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            onClick={() => setShowLogoutConfirm(false)}
+            className="absolute inset-0 bg-surface-950/45 backdrop-blur-md animate-in fade-in duration-200"
+          />
+          <div className={`relative w-full max-w-sm p-6 md:p-8 rounded-3xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 border ${
+            isDark ? 'bg-surface-900 border-surface-800 text-white' : 'bg-white border border-surface-150 text-surface-950'
+          }`}>
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500">
+                <LogOut size={24} />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-bold text-lg">Confirm Logout</h3>
+                <p className={`text-xs ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
+                  Are you sure you want to log out of your SnipLink account?
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 w-full pt-2">
+                <button 
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className={`py-2.5 px-4 rounded-xl text-xs font-bold border cursor-pointer transition-all ${
+                    isDark ? 'bg-surface-800 hover:bg-surface-750 border-surface-700 text-surface-200' : 'bg-white hover:bg-surface-100 border-surface-200 text-surface-700'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowLogoutConfirm(false);
+                    logout();
+                  }}
+                  className="py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-500 active:scale-95 text-white text-xs font-bold border-none cursor-pointer transition-all shadow-md shadow-red-600/10"
+                >
+                  Logout
+                </button>
               </div>
             </div>
           </div>
