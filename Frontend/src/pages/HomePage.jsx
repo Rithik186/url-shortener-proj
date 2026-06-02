@@ -516,32 +516,38 @@ const HomePage = () => {
     { 
       icon: <Sparkles size={20} />, 
       label: 'Overview', 
-      onClick: () => setActiveTab('dashboard') 
+      onClick: () => setActiveTab('dashboard'),
+      isActive: activeTab === 'dashboard'
     },
     { 
       icon: <Link2 size={20} />, 
       label: 'Links', 
-      onClick: () => setActiveTab('links') 
+      onClick: () => setActiveTab('links'),
+      isActive: activeTab === 'links'
     },
     { 
       icon: <BarChart3 size={20} />, 
       label: 'Analytics', 
-      onClick: () => { setSelectedUrlForAnalytics(null); setActiveTab('analytics'); } 
+      onClick: () => { setSelectedUrlForAnalytics(null); setActiveTab('analytics'); },
+      isActive: activeTab === 'analytics'
     },
     { 
       icon: <Settings size={20} />, 
       label: 'Settings', 
-      onClick: () => setActiveTab('settings') 
+      onClick: () => setActiveTab('settings'),
+      isActive: activeTab === 'settings'
     },
     { 
       icon: isDark ? <Sun size={20} /> : <Moon size={20} />, 
       label: isDark ? 'Light Mode' : 'Dark Mode', 
-      onClick: toggleTheme 
+      onClick: toggleTheme,
+      isActive: false
     },
     { 
       icon: <LogOut size={20} className="text-red-500" />, 
       label: 'Logout', 
-      onClick: () => setShowLogoutConfirm(true) 
+      onClick: () => setShowLogoutConfirm(true),
+      isActive: false
     }
   ]
 
