@@ -1,8 +1,11 @@
 const express = require('express');
-const { shortenUrl, getUserUrls, deleteUrl } = require('../Controller/urlController');
+const { shortenUrl, getUserUrls, deleteUrl, getUrlStats } = require('../Controller/urlController');
 const { protect } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Public stats page route
+router.route('/stats/:shortCode').get(getUrlStats);
 
 // All URL management routes require authentication
 router.route('/shorten').post(protect, shortenUrl);

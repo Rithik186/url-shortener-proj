@@ -32,6 +32,18 @@ const urlSchema = new mongoose.Schema(
           type: Date,
           default: Date.now,
         },
+        browser: {
+          type: String,
+          default: 'Unknown',
+        },
+        device: {
+          type: String,
+          default: 'Desktop',
+        },
+        country: {
+          type: String,
+          default: 'United States',
+        },
       },
     ],
   },

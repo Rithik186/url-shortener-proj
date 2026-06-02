@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast'
 import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
 import HomePage from './pages/HomePage'
+import PublicStatsPage from './pages/PublicStatsPage'
 import './index.css'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
             <Route path="/login" element={<AuthPage />} />
             <Route path="/signup" element={<AuthPage />} />
             <Route path="/home" element={<HomePage />} />
+            <Route path="/stats/:shortCode" element={<PublicStatsPage />} />
           </Routes>
         </AuthProvider>
       </Router>
