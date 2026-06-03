@@ -12,6 +12,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import QRCode from 'qrcode'
 import MagicBento from '../Components/MagicBento'
 import Dock from '../Components/Dock'
+import AnalyticsDashboard from '../Components/AnalyticsDashboard'
 
 const WhatsAppIcon = ({ size = 16, className = '' }) => (
   <svg 
@@ -1376,354 +1377,16 @@ const HomePage = () => {
           )}
 
           {/* TAB 2: DETAILED ANALYTICS VIEW */}
-          {activeTab === 'analytics' && (() => {
-            const totalCreated = urls.length;
-            const activeLinksCount = urls.filter(url => !url.expiresAt || new Date(url.expiresAt) >= new Date()).length;
-            const expiredLinksCount = urls.filter(url => url.expiresAt && new Date(url.expiresAt) < new Date()).length;
-
-            // Generate last 7 days dates
-            const last7Days = [];
-            for (let i = 6; i >= 0; i--) {
-              const d = new Date();
-              d.setDate(d.getDate() - i);
-              last7Days.push(d.toISOString().split('T')[0]);
-            }
-
-            // Aggregate global visitor data
-            const allVisits = urls.flatMap(u => u.visits || []);
-            const globalBrowsers = {};
-            const globalDevices = {};
-            const globalCountries = {};
-
-            allVisits.forEach(v => {
-              globalBrowsers[v.browser || 'Unknown'] = (globalBrowsers[v.browser || 'Unknown'] || 0) + 1;
-              globalDevices[v.device || 'Desktop'] = (globalDevices[v.device || 'Desktop'] || 0) + 1;
-              globalCountries[v.country || 'United States'] = (globalCountries[v.country || 'United States'] || 0) + 1;
-            });
-
-            const globalClicksByDay = last7Days.map(day => {
-              const count = allVisits.filter(v => {
-                const vDate = new Date(v.timestamp).toISOString().split('T')[0];
-                return vDate === day;
-              }).length;
-              return { day, count };
-            });
-
-            const globalMaxClickVal = Math.max(...globalClicksByDay.map(d => d.count), 1);
-
-            return (
-              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                {selectedUrlForAnalytics ? (() => {
-                  // Specific URL Analytics Computations
-                  const uVisits = selectedUrlForAnalytics.visits || [];
-                  const uBrowsers = {};
-                  const uDevices = {};
-                  const uCountries = {};
-
-                  uVisits.forEach(v => {
-                    uBrowsers[v.browser || 'Unknown'] = (uBrowsers[v.browser || 'Unknown'] || 0) + 1;
-                    uDevices[v.device || 'Desktop'] = (uDevices[v.device || 'Desktop'] || 0) + 1;
-                    uCountries[v.country || 'United States'] = (uCountries[v.country || 'United States'] || 0) + 1;
-                  });
-
-                  const uClicksByDay = last7Days.map(day => {
-                    const count = uVisits.filter(v => {
-                      const vDate = new Date(v.timestamp).toISOString().split('T')[0];
-                      return vDate === day;
-                    }).length;
-                    return { day, count };
-                  });
-
-                  const uMaxClickVal = Math.max(...uClicksByDay.map(d => d.count), 1);
-
-                  return (
-                    <div className="space-y-6">
-                      {/* Back button & stats header */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <button
-                          onClick={() => setSelectedUrlForAnalytics(null)}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border-none cursor-pointer ${
-                            isDark ? 'bg-surface-800 hover:bg-surface-750 text-white' : 'bg-white hover:bg-surface-100 text-surface-900 shadow-sm border border-surface-200'
-                          }`}
-                        >
-                          <ArrowLeft size={14} />
-                          Back to Dashboard Overview
-                        </button>
-                        
-                        <div className="flex items-center gap-2">
-                          <Link 
-                            to={`/stats/${selectedUrlForAnalytics.shortCode}`}
-                            target="_blank"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border-none cursor-pointer no-underline bg-primary-500/10 text-primary-500 hover:bg-primary-500/20"
-                          >
-                            <Globe size={14} />
-                            View Public Stats Page
-                          </Link>
-                        </div>
-                      </div>
-
-                      {/* Header Identity Card */}
-                      <div className={`p-6 rounded-3xl border ${
-                        isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
-                      }`}>
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          <div className="space-y-1.5 min-w-0">
-                            <span className="text-[10px] uppercase font-black tracking-widest text-primary-500">Live Analytics Detail</span>
-                            <div className="flex items-center gap-2.5">
-                              <a 
-                                href={`http://127.0.0.1:5000/${selectedUrlForAnalytics.shortCode}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-2xl font-black text-primary-500 hover:underline inline-flex items-center gap-1.5"
-                              >
-                                neb.la/{selectedUrlForAnalytics.shortCode}
-                                <ExternalLink size={14} />
-                              </a>
-                            </div>
-                            <p className="text-xs truncate opacity-70">
-                              Destination: <a href={selectedUrlForAnalytics.originalUrl} target="_blank" rel="noreferrer" className="hover:underline">{selectedUrlForAnalytics.originalUrl}</a>
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <button 
-                              onClick={() => handleCopy(selectedUrlForAnalytics.shortCode, selectedUrlForAnalytics._id)}
-                              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border-none cursor-pointer ${
-                                copiedId === selectedUrlForAnalytics._id 
-                                  ? 'bg-green-500 text-white' 
-                                  : isDark ? 'bg-surface-800 text-white hover:bg-surface-700' : 'bg-surface-100 text-surface-900 hover:bg-surface-250 border border-surface-200'
-                              }`}
-                            >
-                              {copiedId === selectedUrlForAnalytics._id ? <Check size={14} /> : <Copy size={14} />}
-                              Copy Link
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Quick Cards */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className={`p-6 rounded-3xl border ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'}`}>
-                          <span className="text-xs opacity-75 font-semibold">Total Clicks</span>
-                          <h3 className="text-3xl font-black mt-2 text-primary-500">{selectedUrlForAnalytics.clicks}</h3>
-                          <p className="text-[10px] opacity-60 mt-1">Live recorded redirect visitors</p>
-                        </div>
-                        <div className={`p-6 rounded-3xl border ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'}`}>
-                          <span className="text-xs opacity-75 font-semibold">Created Date</span>
-                          <h3 className="text-2xl font-black mt-3">{new Date(selectedUrlForAnalytics.createdAt).toLocaleDateString()}</h3>
-                          <p className="text-[10px] opacity-60 mt-1">at {new Date(selectedUrlForAnalytics.createdAt).toLocaleTimeString()}</p>
-                        </div>
-                        <div className={`p-6 rounded-3xl border ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'}`}>
-                          <span className="text-xs opacity-75 font-semibold">Last Visited Time</span>
-                          <h3 className="text-2xl font-black mt-3">
-                            {uVisits.length > 0 ? new Date(uVisits[uVisits.length - 1].timestamp).toLocaleDateString() : 'Never'}
-                          </h3>
-                          <p className="text-[10px] opacity-60 mt-1">
-                            {uVisits.length > 0 ? new Date(uVisits[uVisits.length - 1].timestamp).toLocaleTimeString() : 'Awaiting clicks'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Line Chart and visitor details */}
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Custom SVG Line Chart */}
-                        <div className={`lg:col-span-2 p-6 rounded-3xl border ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'}`}>
-                          <h4 className="text-sm font-bold mb-4">7-Day Click Volume</h4>
-                          <div className="relative h-60 w-full">
-                            <svg className="w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
-                              <defs>
-                                <linearGradient id="chartGradSingle" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="var(--color-primary-500, #6366f1)" stopOpacity="0.4" />
-                                  <stop offset="100%" stopColor="var(--color-primary-500, #6366f1)" stopOpacity="0" />
-                                </linearGradient>
-                              </defs>
-
-                              {/* Grid lines */}
-                              {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
-                                <line 
-                                  key={i} 
-                                  x1="0" 
-                                  y1={200 - p * 160 - 20} 
-                                  x2="500" 
-                                  y2={200 - p * 160 - 20} 
-                                  stroke={isDark ? '#374151' : '#e5e7eb'} 
-                                  strokeWidth="1" 
-                                  strokeDasharray="4 4"
-                                />
-                              ))}
-
-                              {/* Path */}
-                              {(() => {
-                                const points = uClicksByDay.map((d, index) => {
-                                  const x = 30 + index * 73
-                                  const y = 180 - (d.count / uMaxClickVal) * 140
-                                  return { x, y, count: d.count }
-                                })
-
-                                const pathD = points.reduce((acc, p, i) => {
-                                  return i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`
-                                }, '')
-
-                                const areaD = points.length > 0 
-                                  ? `${pathD} L ${points[points.length - 1].x} 180 L ${points[0].x} 180 Z` 
-                                  : ''
-
-                                return (
-                                  <>
-                                    {areaD && <path d={areaD} fill="url(#chartGradSingle)" />}
-                                    {pathD && (
-                                      <path 
-                                        d={pathD} 
-                                        fill="none" 
-                                        stroke="var(--color-primary-500, #6366f1)" 
-                                        strokeWidth="3.5" 
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      />
-                                    )}
-                                    {points.map((p, i) => (
-                                      <g key={i} className="group cursor-pointer">
-                                        <circle cx={p.x} cy={p.y} r="4.5" fill={isDark ? '#1e1b4b' : '#ffffff'} stroke="var(--color-primary-500, #6366f1)" strokeWidth="3" />
-                                        <text x={p.x} y={p.y - 10} textAnchor="middle" className="text-[9px] font-bold fill-current opacity-80">{p.count}</text>
-                                      </g>
-                                    ))}
-                                  </>
-                                )
-                              })()}
-                            </svg>
-                            <div className="flex justify-between px-3 mt-2 text-[10px] opacity-75 font-semibold">
-                              {uClicksByDay.map((d, i) => (
-                                <span key={i}>
-                                  {new Date(d.day).toLocaleDateString(undefined, { weekday: 'short', month: 'numeric', day: 'numeric' })}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Demographics details */}
-                        <div className={`p-6 rounded-3xl border ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'}`}>
-                          <h4 className="text-sm font-bold mb-4">Device & Browser</h4>
-                          <div className="space-y-4">
-                            {/* Devices */}
-                            <div className="space-y-2">
-                              <span className="text-[9px] uppercase font-bold tracking-wider text-primary-500 block">Devices</span>
-                              {Object.keys(uDevices).length === 0 ? <p className="text-xs opacity-60">No device logs</p> : (
-                                Object.entries(uDevices).map(([dev, count]) => {
-                                  const pct = ((count / uVisits.length) * 100).toFixed(0)
-                                  return (
-                                    <div key={dev} className="space-y-1">
-                                      <div className="flex items-center justify-between text-xs font-semibold">
-                                        <span className="capitalize">{dev}</span>
-                                        <span>{count} ({pct}%)</span>
-                                      </div>
-                                      <div className={`w-full h-1.5 rounded-full ${isDark ? 'bg-surface-800' : 'bg-surface-100'}`}>
-                                        <div style={{ width: `${pct}%` }} className="h-full bg-primary-500 rounded-full" />
-                                      </div>
-                                    </div>
-                                  )
-                                })
-                              )}
-                            </div>
-
-                            {/* Browsers */}
-                            <div className="space-y-2">
-                              <span className="text-[9px] uppercase font-bold tracking-wider text-primary-500 block">Browsers</span>
-                              {Object.keys(uBrowsers).length === 0 ? <p className="text-xs opacity-60">No browser logs</p> : (
-                                Object.entries(uBrowsers).map(([br, count]) => {
-                                  const pct = ((count / uVisits.length) * 100).toFixed(0)
-                                  return (
-                                    <div key={br} className="space-y-1">
-                                      <div className="flex items-center justify-between text-xs font-semibold">
-                                        <span>{br}</span>
-                                        <span>{count} ({pct}%)</span>
-                                      </div>
-                                      <div className={`w-full h-1.5 rounded-full ${isDark ? 'bg-surface-800' : 'bg-surface-100'}`}>
-                                        <div style={{ width: `${pct}%` }} className="h-full bg-accent-500 rounded-full" />
-                                      </div>
-                                    </div>
-                                  )
-                                })
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Geo + Live visitor logs */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Geolocation countries */}
-                        <div className={`p-6 rounded-3xl border ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'}`}>
-                          <h4 className="text-sm font-bold mb-4 flex items-center gap-1.5">
-                            <Globe size={16} className="text-primary-500" />
-                            Geolocation (Countries)
-                          </h4>
-                          <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
-                            {Object.keys(uCountries).length === 0 ? (
-                              <p className="text-xs text-center py-6 opacity-60">No geographic data logged</p>
-                            ) : (
-                              Object.entries(uCountries)
-                                .sort((a, b) => b[1] - a[1])
-                                .map(([c, count]) => {
-                                  const pct = ((count / uVisits.length) * 100).toFixed(0)
-                                  return (
-                                    <div key={c} className="flex items-center justify-between text-xs py-1.5 border-b border-surface-200 dark:border-surface-850">
-                                      <span className="font-semibold">{c}</span>
-                                      <span className="font-bold text-primary-500">{count} ({pct}%)</span>
-                                    </div>
-                                  )
-                                })
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Recent log logs */}
-                        <div className={`p-6 rounded-3xl border ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'}`}>
-                          <h4 className="text-sm font-bold mb-4 flex items-center gap-1.5">
-                            <Clock size={16} className="text-primary-500" />
-                            Live Visit History (Realtime)
-                          </h4>
-                          <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
-                            {uVisits.length === 0 ? (
-                              <p className="text-xs text-center py-6 opacity-60">No visits recorded</p>
-                            ) : (
-                              [...uVisits].reverse().slice(0, 10).map((v, i) => (
-                                <div key={i} className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${
-                                  isDark ? 'bg-surface-950 border-surface-850' : 'bg-surface-50 border-surface-150'
-                                }`}>
-                                  <div>
-                                    <p className="font-semibold">{v.device} • {v.browser}</p>
-                                    <p className="text-[10px] opacity-60">{new Date(v.timestamp).toLocaleString()}</p>
-                                  </div>
-                                  <span className="font-bold text-primary-500">{v.country}</span>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })() : (
-                  <MagicBento 
-                    urls={urls}
-                    totalCreated={totalCreated}
-                    activeLinksCount={activeLinksCount}
-                    expiredLinksCount={expiredLinksCount}
-                    totalClicks={totalClicks}
-                    globalClicksByDay={globalClicksByDay}
-                    globalMaxClickVal={globalMaxClickVal}
-                    globalDevices={globalDevices}
-                    globalBrowsers={globalBrowsers}
-                    globalCountries={globalCountries}
-                    allVisits={allVisits}
-                    onSelectUrl={setSelectedUrlForAnalytics}
-                    isDark={isDark}
-                  />
-                )}
-              </div>
-            );
-          })()}
+          {activeTab === 'analytics' && (
+            <AnalyticsDashboard
+              urls={urls}
+              isDark={isDark}
+              selectedUrl={selectedUrlForAnalytics}
+              setSelectedUrl={setSelectedUrlForAnalytics}
+              handleCopy={handleCopy}
+              copiedId={copiedId}
+            />
+          )}
 
           {/* TAB 3: QR CODE GENERATOR */}
           {false && (
@@ -2081,7 +1744,7 @@ const HomePage = () => {
                 <button 
                   onClick={() => setShowLogoutConfirm(false)}
                   className={`py-2.5 px-4 rounded-xl text-xs font-bold border cursor-pointer transition-all ${
-                    isDark ? 'bg-surface-800 hover:bg-surface-750 border-surface-700 text-surface-200' : 'bg-white hover:bg-surface-100 border-surface-200 text-surface-700'
+                    isDark ? 'bg-surface-800 hover:bg-surface-750 border-surface-700 text-surface-400 hover:text-white' : 'bg-white hover:bg-surface-100 border-surface-200 text-surface-700'
                   }`}
                 >
                   Cancel
@@ -2178,7 +1841,7 @@ const HomePage = () => {
                   type="button"
                   onClick={() => setSelectedUrlForEdit(null)}
                   className={`py-2.5 px-4 rounded-xl text-xs font-bold border cursor-pointer transition-all ${
-                    isDark ? 'bg-surface-800 hover:bg-surface-750 border-surface-700 text-surface-200' : 'bg-white hover:bg-surface-100 border-surface-200 text-surface-700'
+                    isDark ? 'bg-surface-800 hover:bg-surface-750 border-surface-700 text-surface-400 hover:text-white' : 'bg-white hover:bg-surface-100 border-surface-200 text-surface-700'
                   }`}
                 >
                   Cancel

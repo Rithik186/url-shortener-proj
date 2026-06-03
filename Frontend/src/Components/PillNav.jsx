@@ -234,11 +234,11 @@ const PillNav = ({
             ref={el => {
               logoRef.current = el;
             }}
-            className="rounded-full p-2 inline-flex items-center justify-center overflow-hidden shadow-md"
+            className="rounded-full p-2 inline-flex items-center justify-center overflow-hidden shadow-md border border-solid border-surface-200 dark:border-surface-800"
             style={{
               width: 'var(--nav-h)',
               height: 'var(--nav-h)',
-              background: 'var(--base, #000)'
+              background: (baseColor === '#fff' || baseColor === '#ffffff') ? '#120F17' : 'var(--base, #000)'
             }}
           >
             <img src={logo} alt={logoAlt} ref={logoImgRef} className="w-full h-full object-cover block" />
@@ -251,11 +251,11 @@ const PillNav = ({
             ref={el => {
               logoRef.current = el;
             }}
-            className="rounded-full p-2 inline-flex items-center justify-center overflow-hidden shadow-md"
+            className="rounded-full p-2 inline-flex items-center justify-center overflow-hidden shadow-md border border-solid border-surface-200 dark:border-surface-800"
             style={{
               width: 'var(--nav-h)',
               height: 'var(--nav-h)',
-              background: 'var(--base, #000)'
+              background: (baseColor === '#fff' || baseColor === '#ffffff') ? '#120F17' : 'var(--base, #000)'
             }}
           >
             <img src={logo} alt={logoAlt} ref={logoImgRef} className="w-full h-full object-cover block" />
@@ -330,8 +330,23 @@ const PillNav = ({
                 'relative overflow-hidden inline-flex items-center justify-center h-full no-underline rounded-full box-border font-semibold text-[13px] uppercase tracking-[0.2px] whitespace-nowrap cursor-pointer px-0';
 
               return (
-                <li key={item.href} role="none" className="flex h-full">
-                  {isRouterLink(item.href) ? (
+                <li key={item.href || item.label} role="none" className="flex h-full">
+                  {item.onClick ? (
+                    <button
+                      role="menuitem"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        item.onClick(e);
+                      }}
+                      className={basePillClasses}
+                      style={pillStyle}
+                      aria-label={item.ariaLabel || item.label}
+                      onMouseEnter={() => handleEnter(i)}
+                      onMouseLeave={() => handleLeave(i)}
+                    >
+                      {PillContent}
+                    </button>
+                  ) : isRouterLink(item.href) ? (
                     <Link
                       role="menuitem"
                       to={item.href}
@@ -412,8 +427,22 @@ const PillNav = ({
               'block py-3 px-4 text-[14px] font-medium rounded-[50px] transition-all duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)]';
 
             return (
-              <li key={item.href}>
-                {isRouterLink(item.href) ? (
+              <li key={item.href || item.label}>
+                {item.onClick ? (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      item.onClick(e);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`${linkClasses} w-full text-left bg-transparent border-none cursor-pointer`}
+                    style={defaultStyle}
+                    onMouseEnter={hoverIn}
+                    onMouseLeave={hoverOut}
+                  >
+                    {item.label}
+                  </button>
+                ) : isRouterLink(item.href) ? (
                   <Link
                     to={item.href}
                     className={linkClasses}

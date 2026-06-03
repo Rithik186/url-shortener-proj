@@ -31,6 +31,7 @@ app.use(cookieParser());
 // Routes
 app.use('/api/auth', require('./Routes/authRoutes'));
 app.use('/api/urls', require('./Routes/urlRoutes'));
+app.use('/api/contact', require('./Routes/contactRoutes'));
 
 // Short URL Redirect Route
 const { redirectUrl } = require('./Controller/urlController');

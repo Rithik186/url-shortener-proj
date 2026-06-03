@@ -40,7 +40,7 @@ const CTASection = () => {
             <Link
               to="/signup"
               id="cta-signup-btn"
-              className="bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-semibold px-8 py-4 rounded-xl flex items-center gap-2 shadow-xl shadow-primary-500/25 hover:shadow-primary-500/40 hover:-translate-y-0.5 transition-all duration-300 no-underline text-base"
+              className="bg-gradient-to-r from-[#8b00e0] to-[#a400ff] hover:from-[#9b1aef] hover:to-[#b740ff] text-white font-semibold px-8 py-4 rounded-xl flex items-center gap-2 shadow-xl shadow-[#a400ff]/25 hover:shadow-[#a400ff]/40 hover:-translate-y-0.5 transition-all duration-300 no-underline text-base"
             >
               Get Started — It's Free
               <ArrowRight size={18} />
