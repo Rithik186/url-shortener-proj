@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useTheme } from '../context/ThemeContext'
 import PillNav from '../Components/PillNav'
 import HeroSection from '../Components/landing/HeroSection'
@@ -61,10 +62,15 @@ const LandingPage = () => {
   }
 
   return (
-    <div className={`min-h-screen relative overflow-x-hidden ${isDark ? 'bg-surface-950 text-white' : 'bg-surface-50 text-surface-900'}`}>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      className={`min-h-screen relative overflow-x-hidden ${isDark ? 'bg-transparent text-white' : 'bg-surface-50 text-surface-900'}`}
+    >
       
       {/* Floating Header Actions / Theme Toggle */}
-      <div className="absolute top-[1.2em] right-6 z-[1001] flex items-center gap-3">
+      <div className="fixed top-[1.2em] right-[4.5rem] md:right-6 z-[1001] flex items-center gap-3">
         <button
           onClick={toggleTheme}
           className={`p-2.5 rounded-full border transition-all duration-300 cursor-pointer shadow-md flex items-center justify-center ${
@@ -80,7 +86,6 @@ const LandingPage = () => {
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <PillNav
-          logo={logo}
           logoAlt="Nebula Logo"
           items={navItems}
           ease="power3.easeOut"
@@ -208,7 +213,7 @@ const LandingPage = () => {
         </div>
       )}
 
-    </div>
+    </motion.div>
   )
 }
 

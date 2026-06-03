@@ -1,16 +1,13 @@
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '../../context/ThemeContext'
 
 const CTASection = () => {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-80px' })
   const { isDark } = useTheme()
 
   return (
-    <section className="relative py-28 overflow-hidden">
+    <section className="relative py-16 md:py-20 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] rounded-full blur-3xl ${
           isDark ? 'bg-primary-500/8' : 'bg-primary-100/50'
@@ -19,10 +16,10 @@ const CTASection = () => {
 
       <div className="max-w-4xl mx-auto px-6 lg:px-8 relative z-10">
         <motion.div
-          ref={ref}
           initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.7 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="glass-card p-12 md:p-16 text-center relative overflow-hidden"
         >
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-primary-500/50 to-transparent" />

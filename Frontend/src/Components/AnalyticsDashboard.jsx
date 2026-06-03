@@ -193,7 +193,7 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
           
           {/* Centered label */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-xl font-black font-[family-name:var(--font-display)]">
+            <span className="text-xl font-bold font-sans">
               {activeSegment ? activeSegment.value.toLocaleString() : '0'}
             </span>
             <span className="text-[9px] uppercase tracking-widest opacity-60">
@@ -382,9 +382,7 @@ const AnalyticsDashboard = ({
   const topPerformanceUrls = [...urls].sort((a, b) => b.clicks - a.clicks);
 
   // Styling helper
-  const cardBgClass = isDark 
-    ? 'bg-surface-900 border-surface-800 text-white' 
-    : 'bg-white border-surface-200 text-surface-900 shadow-sm';
+  const cardBgClass = 'glass-card text-surface-900 dark:text-white';
 
   const subTextClass = isDark ? 'text-surface-400' : 'text-surface-500';
 
@@ -489,7 +487,7 @@ const AnalyticsDashboard = ({
               <div className={`p-6 rounded-3xl border ${cardBgClass} flex flex-col justify-between h-28`}>
                 <span className="text-xs opacity-75 font-semibold">Redirect Clicks</span>
                 <div>
-                  <h3 className="text-3xl font-black font-[family-name:var(--font-display)]">{selectedUrl.clicks}</h3>
+                   <h3 className="text-2xl font-bold font-sans">{selectedUrl.clicks}</h3>
                   <p className="text-[9px] opacity-50">Total visits recorded live</p>
                 </div>
               </div>
@@ -549,7 +547,7 @@ const AnalyticsDashboard = ({
                 ) : (
                   [...uVisits].reverse().slice(0, 10).map((v, idx) => (
                     <div key={idx} className={`p-3 rounded-2xl border flex items-center justify-between text-xs ${
-                      isDark ? 'bg-surface-950 border-surface-850/60' : 'bg-surface-50 border-surface-150'
+                      isDark ? 'bg-surface-950/40 border-surface-850/60' : 'bg-white/10 border-white/20'
                     }`}>
                       <div>
                         <p className="font-bold">{v.device || 'Desktop'} • {v.browser || 'Browser'}</p>
@@ -571,7 +569,7 @@ const AnalyticsDashboard = ({
           {/* Title & Filter Header */}
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <div>
-              <h2 className="text-3xl font-black tracking-tight font-[family-name:var(--font-display)]">
+               <h2 className="text-2xl font-bold tracking-tight font-sans">
                 Detailed Link Analytics
               </h2>
               <p className={`text-sm ${subTextClass}`}>
@@ -587,8 +585,8 @@ const AnalyticsDashboard = ({
                 value={activeDateRange}
                 className={`px-3 py-2 rounded-xl border text-xs font-bold outline-none cursor-not-allowed opacity-75 ${
                   isDark 
-                    ? 'bg-surface-900 border-surface-800 text-white' 
-                    : 'bg-white border-surface-200 text-surface-700'
+                    ? 'bg-surface-900/60 border-surface-800 text-white' 
+                    : 'bg-white/20 border-white/30 text-surface-700'
                 }`}
               >
                 <option value="Last 7 Days">Last 7 Days</option>
@@ -605,7 +603,7 @@ const AnalyticsDashboard = ({
                 <span className="text-xs font-bold uppercase tracking-wider">Total Links</span>
               </div>
               <div>
-                <h3 className="text-3xl font-black font-[family-name:var(--font-display)]">{totalCreated}</h3>
+                 <h3 className="text-2xl font-bold font-sans">{totalCreated}</h3>
                 <p className="text-[9px] opacity-50 mt-0.5">Shortlinks created overall</p>
               </div>
             </div>
@@ -616,7 +614,7 @@ const AnalyticsDashboard = ({
                 <span className="text-xs font-bold uppercase tracking-wider">Active</span>
               </div>
               <div>
-                <h3 className="text-3xl font-black font-[family-name:var(--font-display)]">{activeLinksCount}</h3>
+                 <h3 className="text-2xl font-bold font-sans">{activeLinksCount}</h3>
                 <p className="text-[9px] opacity-50 mt-0.5">Active non-expired links</p>
               </div>
             </div>
@@ -627,7 +625,7 @@ const AnalyticsDashboard = ({
                 <span className="text-xs font-bold uppercase tracking-wider">Expired</span>
               </div>
               <div>
-                <h3 className="text-3xl font-black font-[family-name:var(--font-display)]">{expiredLinksCount}</h3>
+                 <h3 className="text-2xl font-bold font-sans">{expiredLinksCount}</h3>
                 <p className="text-[9px] opacity-50 mt-0.5">Expired time-limited links</p>
               </div>
             </div>
@@ -638,7 +636,7 @@ const AnalyticsDashboard = ({
                 <span className="text-xs font-bold uppercase tracking-wider">Total Clicks</span>
               </div>
               <div>
-                <h3 className="text-3xl font-black font-[family-name:var(--font-display)]">{totalClicks}</h3>
+                 <h3 className="text-2xl font-bold font-sans">{totalClicks}</h3>
                 <p className="text-[9px] opacity-50 mt-0.5">Redirections resolved globally</p>
               </div>
             </div>
@@ -686,7 +684,7 @@ const AnalyticsDashboard = ({
               ) : (
                 [...allVisits].reverse().slice(0, 10).map((v, idx) => (
                   <div key={idx} className={`p-3 rounded-2xl border flex items-center justify-between text-xs ${
-                    isDark ? 'bg-surface-950 border-surface-850/60' : 'bg-surface-50 border-surface-150'
+                    isDark ? 'bg-surface-950/40 border-surface-850/60' : 'bg-white/10 border-white/20'
                   }`}>
                     <div>
                       <p className="font-bold">{v.device || 'Desktop'} • {v.browser || 'Browser'}</p>
@@ -731,7 +729,7 @@ const AnalyticsDashboard = ({
                       className={`grid grid-cols-12 gap-4 items-center px-4 py-3 rounded-2xl border transition-all duration-200 group ${
                         isDark 
                           ? 'border-surface-850/30 bg-surface-950/20 hover:bg-surface-850/20 hover:border-surface-800' 
-                          : 'border-surface-100 bg-surface-50/20 hover:bg-surface-100/50 hover:border-surface-200 shadow-xs'
+                          : 'border-white/30 bg-white/10 hover:bg-white/20 hover:border-white/40 shadow-xs'
                       }`}
                     >
                       {/* Rank */}
@@ -762,7 +760,7 @@ const AnalyticsDashboard = ({
                           className={`p-1.5 rounded-lg border-none cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ${
                             copiedId === url._id
                               ? 'bg-green-500 text-white animate-pulse'
-                              : isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-surface-100 hover:bg-surface-200 text-surface-700'
+                              : isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-white/20 hover:bg-white/45 text-surface-700 border border-white/30'
                           }`}
                         >
                           {copiedId === url._id ? <Check size={11} /> : <Copy size={11} />}
@@ -792,7 +790,7 @@ const AnalyticsDashboard = ({
                         <button
                           onClick={() => setSelectedUrl(url)}
                           className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold border-none cursor-pointer transition-all ${
-                            isDark ? 'bg-surface-800 hover:bg-surface-750 text-white' : 'bg-surface-100 hover:bg-surface-200 text-surface-900 shadow-sm border border-surface-150'
+                            isDark ? 'bg-surface-800 hover:bg-surface-750 text-white' : 'bg-white/20 hover:bg-white/45 text-surface-900 border border-white/30'
                           }`}
                         >
                           Analyze
@@ -812,7 +810,7 @@ const AnalyticsDashboard = ({
                     <div
                       key={url._id}
                       className={`p-4 rounded-2xl border transition-all ${
-                        isDark ? 'bg-surface-950 border-surface-850/60' : 'bg-white border-surface-150 shadow-xs'
+                        isDark ? 'bg-surface-950 border-surface-850/60' : 'bg-white/10 border-white/20'
                       }`}
                     >
                       <div className="flex justify-between items-start gap-2 mb-2">
@@ -841,7 +839,7 @@ const AnalyticsDashboard = ({
                               className={`p-1 rounded-lg border-none cursor-pointer ${
                                 copiedId === url._id
                                   ? 'bg-green-500 text-white'
-                                  : isDark ? 'bg-surface-800 text-white' : 'bg-surface-100 text-surface-700'
+                                  : isDark ? 'bg-surface-800 text-white' : 'bg-white/20 hover:bg-white/45 text-surface-700 border border-white/30'
                               }`}
                             >
                               {copiedId === url._id ? <Check size={10} /> : <Copy size={10} />}

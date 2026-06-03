@@ -474,8 +474,8 @@ const MagicBento = ({
   const topUrls = [...urls].sort((a, b) => b.clicks - a.clicks).slice(0, 5);
 
   const cardStyle = {
-    backgroundColor: isDark ? '#120F17' : '#ffffff',
-    borderColor: isDark ? '#2F293A' : '#e5e7eb',
+    backgroundColor: isDark ? '#0e0a20' : '#ffffff',
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.06)' : '#e5e7eb',
     color: isDark ? 'hsl(0, 0%, 100%)' : 'hsl(240, 10%, 10%)',
     '--glow-x': '50%',
     '--glow-y': '50%',
@@ -497,8 +497,8 @@ const MagicBento = ({
             --glow-intensity: 0;
             --glow-radius: 250px;
             --glow-color: ${glowColor};
-            --border-color: ${isDark ? '#2F293A' : '#e2e8f0'};
-            --background-dark: ${isDark ? '#120F17' : '#ffffff'};
+            --border-color: ${isDark ? 'rgba(255, 255, 255, 0.06)' : '#e2e8f0'};
+            --background-dark: ${isDark ? '#0e0a20' : '#ffffff'};
             --white: ${isDark ? 'hsl(0, 0%, 100%)' : 'hsl(240, 10%, 10%)'};
           }
           

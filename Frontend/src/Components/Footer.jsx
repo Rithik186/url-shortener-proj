@@ -26,7 +26,7 @@ const Footer = () => {
   const { isDark } = useTheme()
 
   return (
-    <footer className={`relative border-t ${isDark ? 'border-surface-800/50 bg-surface-950' : 'border-surface-200 bg-surface-50'}`}>
+    <footer className={`relative border-t ${isDark ? 'border-surface-800/50 bg-transparent' : 'border-surface-200 bg-surface-50'}`}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand */}

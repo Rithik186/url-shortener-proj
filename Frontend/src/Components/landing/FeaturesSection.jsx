@@ -1,10 +1,9 @@
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { motion } from 'framer-motion'
 import { useTheme } from '../../context/ThemeContext'
 import SpotlightCard from '../SpotlightCard'
 
 /* ── Custom SVG Icon Components ─────────────────────────────────────── */
-
+// ... (omitting lines 8 to 76 for brevity, but they are unchanged)
 const IconURLShortening = ({ isDark }) => (
   <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
     <path d="M16 24l-2.83 2.83a4 4 0 01-5.66-5.66L12 16" stroke={isDark ? "white" : "#8b00e0"} strokeWidth="2.5" strokeLinecap="round" fill="none" opacity={isDark ? "0.5" : "0.7"} />
@@ -114,17 +113,15 @@ const features = [
 /* ── Feature Card ────────────────────────────────────────────────────── */
 
 const FeatureCard = ({ feature, index }) => {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-50px' })
   const Icon = feature.icon
   const { isDark } = useTheme()
 
   return (
     <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.6, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
     >
       <SpotlightCard
         spotlightColor={SPOTLIGHT_COLOR}
@@ -160,19 +157,17 @@ const FeatureCard = ({ feature, index }) => {
 /* ── Section ─────────────────────────────────────────────────────────── */
 
 const FeaturesSection = () => {
-  const headRef = useRef(null)
-  const isHeadInView = useInView(headRef, { once: true, margin: '-50px' })
   const { isDark } = useTheme()
 
   return (
-    <section id="features" className="relative py-28">
+    <section id="features" className="relative py-16 md:py-20">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
-          ref={headRef}
           initial={{ opacity: 0, y: 30 }}
-          animate={isHeadInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-16"
         >
           <span className="text-primary-500 text-xs font-semibold tracking-widest uppercase mb-3 block">Features</span>

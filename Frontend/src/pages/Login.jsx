@@ -65,7 +65,7 @@ const Login = () => {
   })
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-6 transition-colors duration-300 relative ${isDark ? 'bg-surface-950' : 'bg-surface-50'}`}>
+    <div className={`min-h-screen flex items-center justify-center p-6 transition-colors duration-300 relative ${isDark ? 'bg-transparent' : 'bg-surface-50'}`}>
       
       {/* Back Button */}
       <button 
@@ -82,9 +82,9 @@ const Login = () => {
         <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[500px] rounded-full blur-3xl opacity-50 ${isDark ? 'bg-primary-500/10' : 'bg-primary-500/5'}`} />
       </div>
 
-      <div className={`relative z-10 w-full max-w-md p-8 md:p-10 rounded-3xl backdrop-blur-xl border shadow-2xl transition-all duration-300 ${
+      <div className={`relative z-10 w-full max-w-md p-8 md:p-10 rounded-3xl backdrop-blur-xl border transition-all duration-300 ${
         isDark 
-          ? 'bg-surface-900/80 border-surface-700/50 shadow-black/40' 
+          ? 'glass-card border-violet-500/20 shadow-[0_20px_50px_rgba(10,4,32,0.6)]' 
           : 'bg-white/80 border-surface-200 shadow-surface-500/10'
       }`}>
         
@@ -107,7 +107,7 @@ const Login = () => {
           {/* Email Input */}
           <div>
             <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-surface-300' : 'text-surface-700'}`}>Email Address</label>
-            <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/50 border-surface-700 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
+            <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-violet-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
               <Mail size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
               <input
                 type="email"
@@ -129,7 +129,7 @@ const Login = () => {
                 Forgot password?
               </Link>
             </div>
-            <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/50 border-surface-700 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
+            <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-violet-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
               <Lock size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
               <input
                 type="password"

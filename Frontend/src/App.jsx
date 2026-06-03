@@ -13,7 +13,12 @@ function App() {
     <ThemeProvider>
       <Router>
         <AuthProvider>
-          <Toaster position="top-right" />
+          <Toaster 
+            position="top-right" 
+            toastOptions={{
+              duration: 1500,
+            }}
+          />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<AuthPage />} />

@@ -301,13 +301,40 @@ const resetPassword = async (req, res) => {
 // @access  Private
 const updateProfile = async (req, res) => {
   try {
-    const { name, avatar } = req.body;
-    const user = await User.findById(req.user._id);
+    const { name, avatar, currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id).select('+password');
 
     if (user) {
       user.name = name || user.name;
       if (avatar !== undefined) {
         user.avatar = avatar; // Base64 string expected
+      }
+
+      // If password update is requested
+      if (currentPassword && newPassword) {
+        if (!user.password) {
+          return res.status(400).json({
+            success: false,
+            message: 'This account uses Google Sign-In. You cannot set a password directly.',
+          });
+        }
+
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+          return res.status(400).json({
+            success: false,
+            message: 'Current password is incorrect.',
+          });
+        }
+
+        if (newPassword.length < 6) {
+          return res.status(400).json({
+            success: false,
+            message: 'New password must be at least 6 characters long.',
+          });
+        }
+
+        user.password = newPassword;
       }
 
       const updatedUser = await user.save();

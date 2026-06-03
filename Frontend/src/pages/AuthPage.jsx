@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AuthPage = () => {
   const { isDark } = useTheme();
@@ -100,6 +101,19 @@ const AuthPage = () => {
         : 'bg-gradient-to-br from-[#faf5ff] via-[#eef2ff] to-[#e0e7ff] text-[#1e1b4b]'
     }`}>
       
+      {/* Fixed Back Button (Top-Left of screen) */}
+      <button 
+        onClick={() => navigate('/')}
+        className={`fixed top-6 left-6 md:top-8 md:left-8 p-3 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer border shadow-md z-[100] hover:scale-110 active:scale-95 ${
+          isDark 
+            ? 'bg-[#151124]/90 border-[#2d254b]/60 text-indigo-300 hover:text-white hover:bg-[#1e1738]/90 hover:shadow-indigo-500/20 hover:border-indigo-500/40 shadow-black/40' 
+            : 'bg-white/90 border-indigo-150 text-indigo-600 hover:text-indigo-900 hover:bg-[#f3f1fa]/90 hover:shadow-indigo-500/10 hover:border-indigo-300 shadow-indigo-100/50'
+        }`}
+        aria-label="Back to home"
+      >
+        <ArrowLeft size={18} className="transition-transform duration-300 hover:-translate-x-0.5" />
+      </button>
+      
       {/* Dynamic Keyframe Animations Style Tag */}
       <style>{`
         @keyframes hoverLargePlanet {
@@ -115,24 +129,42 @@ const AuthPage = () => {
           50% { transform: translateY(-8px); }
         }
         @keyframes twinkle {
-          0%, 100% { opacity: 0.3; transform: scale(0.85); }
-          50% { opacity: 1; transform: scale(1.15); }
+          0%, 100% { opacity: 0.2; transform: scale(0.8); }
+          50% { opacity: 1; transform: scale(1.2); }
         }
-        @keyframes shootingStar {
+        @keyframes shootingStarFast {
           0% {
-            transform: translate(250px, -250px) rotate(-35deg) scaleX(0);
+            transform: translate(60vw, -60vh) rotate(-35deg) scaleX(0);
             opacity: 0;
           }
           8% {
             opacity: 1;
-            transform: translate(120px, -120px) rotate(-35deg) scaleX(1.3);
+            transform: translate(45vw, -45vh) rotate(-35deg) scaleX(2.5);
           }
-          28% {
-            transform: translate(-180px, 180px) rotate(-35deg) scaleX(1.3);
+          65% {
+            transform: translate(-45vw, 45vh) rotate(-35deg) scaleX(2.5);
+            opacity: 0.9;
+          }
+          85%, 100% {
+            transform: translate(-60vw, 60vh) rotate(-35deg) scaleX(0);
             opacity: 0;
           }
-          100% {
-            transform: translate(-250px, 250px) rotate(-35deg) scaleX(0);
+        }
+        @keyframes shootingStarSlow {
+          0% {
+            transform: translate(80vw, -40vh) rotate(-25deg) scaleX(0);
+            opacity: 0;
+          }
+          12% {
+            opacity: 1;
+            transform: translate(55vw, -25vh) rotate(-25deg) scaleX(2);
+          }
+          70% {
+            transform: translate(-55vw, 25vh) rotate(-25deg) scaleX(2);
+            opacity: 0.8;
+          }
+          90%, 100% {
+            transform: translate(-80vw, 40vh) rotate(-25deg) scaleX(0);
             opacity: 0;
           }
         }
@@ -148,40 +180,68 @@ const AuthPage = () => {
         .animate-twinkle {
           animation: twinkle 3.5s ease-in-out infinite;
         }
-        .shooting-star-1 {
-          animation: shootingStar 8s linear infinite;
-        }
-        .shooting-star-2 {
-          animation: shootingStar 11s linear infinite;
-          animation-delay: 3s;
-        }
-        .shooting-star-3 {
-          animation: shootingStar 15s linear infinite;
-          animation-delay: 6s;
-        }
+        .shooting-star-fast-1 { animation: shootingStarFast 5s linear infinite; }
+        .shooting-star-fast-2 { animation: shootingStarFast 7s linear infinite; animation-delay: 1.5s; }
+        .shooting-star-fast-3 { animation: shootingStarFast 9s linear infinite; animation-delay: 3s; }
+        .shooting-star-fast-4 { animation: shootingStarFast 11s linear infinite; animation-delay: 4.5s; }
+        
+        .shooting-star-slow-1 { animation: shootingStarSlow 12s linear infinite; animation-delay: 0.5s; }
+        .shooting-star-slow-2 { animation: shootingStarSlow 15s linear infinite; animation-delay: 3.5s; }
+        .shooting-star-slow-3 { animation: shootingStarSlow 18s linear infinite; animation-delay: 7s; }
+        .shooting-star-slow-4 { animation: shootingStarSlow 22s linear infinite; animation-delay: 10s; }
       `}</style>
 
-      {/* Animated Shooting Stars (Spans the Entire Width) */}
-      <div className="absolute inset-0 pointer-events-none z-10">
-        <div className={`absolute top-[15%] right-[10%] w-36 h-[1.5px] bg-gradient-to-r from-transparent via-[#818cf8] to-white rounded-full shooting-star-1`} />
-        <div className={`absolute top-[35%] right-[30%] w-28 h-[1px] bg-gradient-to-r from-transparent via-[#c084fc] to-white rounded-full shooting-star-2`} />
-        <div className="absolute top-[8%] right-[55%] w-32 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-white rounded-full shooting-star-3" />
-        <div className={`absolute top-[60%] right-[15%] w-36 h-[1px] bg-gradient-to-r from-transparent via-[#818cf8] to-white rounded-full shooting-star-1`} style={{ animationDelay: '2s' }} />
+      {/* Animated Shooting Stars (Spans the Entire Width - Fully Behind) */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        {[
+          { top: '10%', right: '5%', width: 'w-44', height: 'h-[2px]', className: 'shooting-star-fast-1' },
+          { top: '25%', right: '15%', width: 'w-36', height: 'h-[1.5px]', className: 'shooting-star-slow-1' },
+          { top: '40%', right: '8%', width: 'w-44', height: 'h-[2px]', className: 'shooting-star-fast-2' },
+          { top: '55%', right: '20%', width: 'w-36', height: 'h-[1.5px]', className: 'shooting-star-slow-2' },
+          { top: '70%', right: '12%', width: 'w-44', height: 'h-[2px]', className: 'shooting-star-fast-3' },
+          { top: '80%', right: '30%', width: 'w-36', height: 'h-[1.5px]', className: 'shooting-star-slow-3' },
+          { top: '5%', right: '40%', width: 'w-44', height: 'h-[2px]', className: 'shooting-star-fast-4' },
+          { top: '92%', right: '10%', width: 'w-36', height: 'h-[1.5px]', className: 'shooting-star-slow-4' }
+        ].map((star, i) => (
+          <div
+            key={i}
+            style={{ top: star.top, right: star.right }}
+            className={`absolute rounded-full pointer-events-none ${star.width} ${star.height} ${star.className} ${
+              isDark 
+                ? 'bg-gradient-to-r from-transparent via-[#818cf8] to-white' 
+                : 'bg-gradient-to-r from-transparent via-[#7c3aed] to-[#3b82f6]'
+            }`}
+          />
+        ))}
       </div>
 
-      {/* Twinkling Space Stars (Spans the Entire Width) */}
+      {/* Twinkling Space Stars (Spans the Entire Width - Fully Behind) */}
       <div className="absolute inset-0 pointer-events-none z-0">
         {[
-          { top: '12%', left: '15%', size: '2.5px', delay: '0s' },
-          { top: '24%', left: '45%', size: '2px', delay: '0.8s' },
-          { top: '38%', left: '75%', size: '3px', delay: '1.6s' },
-          { top: '52%', left: '88%', size: '1.5px', delay: '0.4s' },
-          { top: '68%', left: '28%', size: '2.5px', delay: '1.2s' },
-          { top: '76%', left: '60%', size: '3.5px', delay: '2.2s' },
-          { top: '88%', left: '80%', size: '2px', delay: '0.6s' },
-          { top: '15%', left: '62%', size: '3px', delay: '0.5s' },
-          { top: '45%', left: '35%', size: '2px', delay: '1.1s' },
-          { top: '80%', left: '10%', size: '3.5px', delay: '1.8s' }
+          { top: '8%', left: '5%', size: '3px', delay: '0s' },
+          { top: '12%', left: '25%', size: '2.5px', delay: '0.4s' },
+          { top: '16%', left: '50%', size: '3.5px', delay: '0.8s' },
+          { top: '20%', left: '72%', size: '2px', delay: '1.2s' },
+          { top: '24%', left: '92%', size: '3px', delay: '1.6s' },
+          { top: '28%', left: '15%', size: '2.5px', delay: '2.0s' },
+          { top: '32%', left: '38%', size: '4px', delay: '0.3s' },
+          { top: '36%', left: '60%', size: '2px', delay: '0.7s' },
+          { top: '40%', left: '80%', size: '3px', delay: '1.1s' },
+          { top: '44%', left: '10%', size: '2.5px', delay: '1.5s' },
+          { top: '48%', left: '48%', size: '3.5px', delay: '1.9s' },
+          { top: '52%', left: '70%', size: '2px', delay: '0.2s' },
+          { top: '56%', left: '90%', size: '3px', delay: '0.6s' },
+          { top: '60%', left: '20%', size: '2.5px', delay: '1.0s' },
+          { top: '64%', left: '35%', size: '4px', delay: '1.4s' },
+          { top: '68%', left: '55%', size: '2px', delay: '1.8s' },
+          { top: '72%', left: '85%', size: '3px', delay: '2.2s' },
+          { top: '76%', left: '12%', size: '2.5px', delay: '0.5s' },
+          { top: '80%', left: '42%', size: '3.5px', delay: '0.9s' },
+          { top: '84%', left: '65%', size: '2px', delay: '1.3s' },
+          { top: '88%', left: '88%', size: '3px', delay: '1.7s' },
+          { top: '92%', left: '30%', size: '2.5px', delay: '2.1s' },
+          { top: '96%', left: '75%', size: '3.5px', delay: '0.1s' },
+          { top: '5%', left: '85%', size: '2px', delay: '0.9s' }
         ].map((star, i) => (
           <div 
             key={i} 
@@ -193,73 +253,103 @@ const AuthPage = () => {
               animationDelay: star.delay
             }}
             className={`absolute rounded-full animate-twinkle ${
-              isDark ? 'bg-white' : 'bg-[#818cf8] opacity-60 shadow-[0_0_8px_rgba(129,140,248,0.3)]'
+              isDark 
+                ? 'bg-white shadow-[0_0_4px_rgba(255,255,255,0.8)]' 
+                : 'bg-[#7c3aed] opacity-50 shadow-[0_0_8px_rgba(124,58,237,0.4)]'
             }`} 
           />
         ))}
       </div>
 
-      {/* LEFT PANEL: Space Adventure Vector Graphics */}
-      <div className={`hidden lg:flex flex-1 relative items-center justify-center overflow-hidden border-r bg-transparent ${
-        isDark ? 'border-[#1f1a3a]/40' : 'border-indigo-100'
-      }`}>
+      {/* Symmetrical Floating Custom Painted Planets (Root Level) */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         
-        {/* Floating Custom Painted Planets */}
-        <div className="absolute inset-0 z-0">
-          
-          {/* 1. Large Top-Left Giant Planet with rings */}
-          <div className="absolute -top-16 -left-16 w-80 h-80 rounded-full flex items-center justify-center animate-large-planet">
-            {/* Planet sphere */}
-            <div className={`w-full h-full rounded-full bg-gradient-to-br shadow-inner relative overflow-hidden ${
-              isDark 
-                ? 'from-[#38bdf8] via-[#0ea5e9] to-[#1e3a8a] shadow-[#000000]/60' 
-                : 'from-[#60a5fa] via-[#a78bfa] to-[#f472b6] shadow-indigo-100'
-            }`}>
-              {/* Planetary atmosphere waves */}
-              <div className="absolute inset-x-0 top-1/4 h-8 bg-white/15 blur-[1px] transform -skew-y-12" />
-              <div className="absolute inset-x-0 top-2/4 h-12 bg-black/10 blur-[2px] transform -skew-y-12" />
-              <div className="absolute inset-x-0 top-3/4 h-6 bg-white/5 blur-[1px] transform -skew-y-12" />
-            </div>
-            {/* Planet Rings */}
-            <div className={`absolute w-[140%] h-[40%] rounded-full border-[8px] -rotate-[15deg] pointer-events-none scale-x-[1.2] blur-[1px] ${
-              isDark ? 'border-white/15' : 'border-indigo-400/20'
-            }`} />
-            <div className={`absolute w-[142%] h-[42%] rounded-full border-[2px] -rotate-[15deg] pointer-events-none scale-x-[1.2] ${
-              isDark ? 'border-white/5' : 'border-indigo-400/10'
-            }`} />
+        {/* 1. Large Top-Left Giant Planet with rings (Left Side) */}
+        <div className="absolute -top-16 -left-16 w-80 h-80 rounded-full flex items-center justify-center animate-large-planet">
+          {/* Planet sphere */}
+          <div className={`w-full h-full rounded-full bg-gradient-to-br shadow-inner relative overflow-hidden ${
+            isDark 
+              ? 'from-[#38bdf8] via-[#0ea5e9] to-[#1e3a8a] shadow-[#000000]/60' 
+              : 'from-[#60a5fa] via-[#a78bfa] to-[#f472b6] shadow-indigo-100'
+          }`}>
+            <div className="absolute inset-x-0 top-1/4 h-8 bg-white/15 blur-[1px] transform -skew-y-12" />
+            <div className="absolute inset-x-0 top-2/4 h-12 bg-black/10 blur-[2px] transform -skew-y-12" />
+            <div className="absolute inset-x-0 top-3/4 h-6 bg-white/5 blur-[1px] transform -skew-y-12" />
           </div>
-
-          {/* 2. Medium Purple Cratered Planet (Middle-Right) */}
-          <div className="absolute top-[32%] right-[20%] w-32 h-32 rounded-full relative animate-medium-planet">
-            <div className={`w-full h-full rounded-full bg-gradient-to-br shadow-md ${
-              isDark 
-                ? 'from-[#c084fc] via-[#8b5cf6] to-[#4c1d95]' 
-                : 'from-[#fbcfe8] via-[#f472b6] to-[#db2777]'
-            }`}>
-              {/* Craters */}
-              <div className="absolute top-4 left-6 w-5 h-5 rounded-full bg-black/10 shadow-inner" />
-              <div className="absolute bottom-6 left-8 w-8 h-8 rounded-full bg-black/10 shadow-inner" />
-              <div className="absolute top-12 right-6 w-4 h-4 rounded-full bg-black/10 shadow-inner" />
-            </div>
-            {/* Planetary glow */}
-            <div className={`absolute -inset-2 rounded-full blur-xl pointer-events-none ${
-              isDark ? 'bg-purple-500/10' : 'bg-pink-400/15'
-            }`} />
-          </div>
-
-          {/* 3. Small Dark Magenta Planet (Bottom-Left) */}
-          <div className="absolute bottom-[20%] left-[12%] w-20 h-20 rounded-full relative animate-small-planet">
-            <div className={`w-full h-full rounded-full bg-gradient-to-br ${
-              isDark 
-                ? 'from-[#f472b6] via-[#db2777] to-[#831843]' 
-                : 'from-[#a7f3d0] via-[#34d399] to-[#059669]'
-            }`} />
-            <div className={`absolute -inset-1 rounded-full blur-lg pointer-events-none ${
-              isDark ? 'bg-pink-500/15' : 'bg-emerald-400/15'
-            }`} />
-          </div>
+          {/* Planet Rings */}
+          <div className={`absolute w-[140%] h-[40%] rounded-full border-[8px] -rotate-[15deg] pointer-events-none scale-x-[1.2] blur-[1px] ${
+            isDark ? 'border-white/15' : 'border-indigo-400/20'
+          }`} />
+          <div className={`absolute w-[142%] h-[42%] rounded-full border-[2px] -rotate-[15deg] pointer-events-none scale-x-[1.2] ${
+            isDark ? 'border-white/5' : 'border-indigo-400/10'
+          }`} />
         </div>
 
+        {/* 2. Medium Purple Cratered Planet (Right Side, floating behind form card!) */}
+        <div className="absolute top-[28%] right-[8%] w-32 h-32 rounded-full flex items-center justify-center animate-medium-planet">
+          <div className={`w-full h-full rounded-full bg-gradient-to-br shadow-md relative overflow-hidden ${
+            isDark 
+              ? 'from-[#c084fc] via-[#8b5cf6] to-[#4c1d95]' 
+              : 'from-[#fbcfe8] via-[#f472b6] to-[#db2777]'
+          }`}>
+            <div className="absolute top-4 left-6 w-5 h-5 rounded-full bg-black/10 shadow-inner" />
+            <div className="absolute bottom-6 left-8 w-8 h-8 rounded-full bg-black/10 shadow-inner" />
+            <div className="absolute top-12 right-6 w-4 h-4 rounded-full bg-black/10 shadow-inner" />
+          </div>
+          {/* Glowing Ring Lines */}
+          <div className={`absolute w-[140%] h-[35%] rounded-full border-[4px] rotate-[20deg] pointer-events-none scale-x-[1.2] blur-[0.5px] ${
+            isDark ? 'border-white/15' : 'border-indigo-400/25'
+          }`} />
+          <div className={`absolute w-[142%] h-[37%] rounded-full border-[1.5px] rotate-[20deg] pointer-events-none scale-x-[1.2] ${
+            isDark ? 'border-white/5' : 'border-indigo-400/15'
+          }`} />
+          <div className={`absolute -inset-2 rounded-full blur-xl pointer-events-none ${
+            isDark ? 'bg-purple-500/20' : 'bg-pink-400/30'
+          }`} />
+        </div>
+
+        {/* 3. Small Cratered Planet (Left Side, floating below left panel text) */}
+        <div className="absolute bottom-[20%] left-[8%] w-24 h-24 rounded-full relative animate-small-planet">
+          <div className={`w-full h-full rounded-full bg-gradient-to-br shadow-md ${
+            isDark 
+              ? 'from-[#f472b6] via-[#db2777] to-[#831843]' 
+              : 'from-[#a7f3d0] via-[#34d399] to-[#059669]'
+          }`}>
+            <div className="absolute top-3 left-4 w-3.5 h-3.5 rounded-full bg-black/10 shadow-inner" />
+            <div className="absolute bottom-4 right-5 w-5 h-5 rounded-full bg-black/10 shadow-inner" />
+          </div>
+          <div className={`absolute -inset-1 rounded-full blur-lg pointer-events-none ${
+            isDark ? 'bg-pink-500/20' : 'bg-emerald-400/30'
+          }`} />
+        </div>
+
+        {/* 4. New Gas Giant Planet (Bottom Right Side, balancing the screen below form card) */}
+        <div className="absolute bottom-[10%] right-[10%] w-28 h-28 rounded-full flex items-center justify-center animate-large-planet" style={{ animationDelay: '-6s' }}>
+          {/* Planet sphere */}
+          <div className={`w-full h-full rounded-full bg-gradient-to-br shadow-inner relative overflow-hidden ${
+            isDark 
+              ? 'from-[#fb923c] via-[#f97316] to-[#7c2d12] shadow-[#000000]/60' 
+              : 'from-[#fef08a] via-[#fb923c] to-[#ec4899] shadow-indigo-100'
+          }`}>
+            <div className="absolute inset-x-0 top-1/3 h-5 bg-white/10 blur-[1px] transform skew-y-6" />
+            <div className="absolute inset-x-0 top-2/3 h-6 bg-black/15 blur-[1.5px] transform skew-y-6" />
+          </div>
+          {/* Planet Rings */}
+          <div className={`absolute w-[130%] h-[30%] rounded-full border-[5px] rotate-[10deg] pointer-events-none scale-x-[1.15] blur-[0.5px] ${
+            isDark ? 'border-orange-400/20' : 'border-rose-400/30'
+          }`} />
+          <div className={`absolute w-[132%] h-[32%] rounded-full border-[1.5px] rotate-[10deg] pointer-events-none scale-x-[1.15] ${
+            isDark ? 'border-orange-300/10' : 'border-rose-300/15'
+          }`} />
+          <div className={`absolute -inset-1 rounded-full blur-xl pointer-events-none ${
+            isDark ? 'bg-orange-500/15' : 'bg-rose-400/25'
+          }`} />
+        </div>
+
+      </div>
+
+      {/* LEFT PANEL: Space Adventure Vector Graphics */}
+      <div className="hidden lg:flex flex-1 relative items-center justify-center overflow-hidden bg-transparent z-10">
         {/* Overlay Title text matching current application details */}
         <div className="absolute bottom-16 left-16 text-left z-10 space-y-1">
           <h2 className={`text-3xl font-black uppercase tracking-wider font-[family-name:var(--font-display)] leading-tight ${
@@ -275,29 +365,20 @@ const AuthPage = () => {
 
       {/* RIGHT PANEL: Transparent overlay Sign In Form */}
       <div className="flex-1 flex flex-col justify-center relative px-4 sm:px-8 md:px-16 lg:px-20 bg-transparent z-10">
-        
-        {/* Back Button */}
-        <button 
-          onClick={() => navigate('/')}
-          className={`absolute top-8 left-8 sm:left-12 p-2.5 rounded-full flex items-center justify-center transition-all cursor-pointer border shadow-sm z-20 hover:scale-105 active:scale-95 ${
-            isDark 
-              ? 'bg-[#151124] border-[#2d254b] text-surface-400 hover:text-white hover:bg-[#1a1530]' 
-              : 'bg-white border-indigo-100 text-slate-500 hover:text-slate-900 hover:bg-[#f5f7ff]'
-          }`}
-          aria-label="Back to home"
-        >
-          <ArrowLeft size={16} />
-        </button>
 
         {/* Glassmorphic Widget card wrapper to make the form stand out cleanly */}
-        <div className={`max-w-[440px] w-full mx-auto relative z-10 p-8 md:p-10 rounded-[32px] backdrop-blur-md border transition-all duration-300 ${
-          isDark 
-            ? 'bg-[#110e20]/60 border-[#2d254b]/50 shadow-[0_20px_50px_rgba(0,0,0,0.3)]' 
-            : 'bg-white/60 border-indigo-200/50 shadow-[0_30px_60px_-15px_rgba(99,102,241,0.12)]'
-        }`}>
+        <motion.div 
+          layout
+          transition={{ type: "spring", stiffness: 260, damping: 28 }}
+          className={`max-w-[440px] w-full mx-auto relative z-10 p-8 md:p-10 rounded-[32px] backdrop-blur-md border transition-colors duration-300 ${
+            isDark 
+              ? 'bg-[#110e20]/60 border-[#2d254b]/50 shadow-[0_20px_50px_rgba(0,0,0,0.3)]' 
+              : 'bg-white/60 border-indigo-200/50 shadow-[0_30px_60px_-15px_rgba(99,102,241,0.12)]'
+          }`}
+        >
           
           {/* Main Title heading matching the image */}
-          <div className="mb-8">
+          <motion.div layout className="mb-8">
             <h1 className={`text-4xl md:text-5xl font-black mb-3 tracking-tight font-[family-name:var(--font-display)] uppercase ${
               isDark ? 'text-white' : 'text-[#1e1b4b]'
             }`}>
@@ -308,34 +389,45 @@ const AuthPage = () => {
             }`}>
               {isLogin ? 'Sign in with email address' : 'Create an account to begin'}
             </p>
-          </div>
+          </motion.div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             
             {/* Full Name (Sign Up Only) */}
-            {!isLogin && (
-              <div className="space-y-1">
-                <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
-                  isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
-                }`}>
-                  <User size={18} className={`absolute left-4 ${isDark ? 'text-slate-500' : 'text-indigo-400'}`} />
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required={!isLogin}
-                    className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm font-semibold ${
-                      isDark ? 'text-white placeholder-slate-600' : 'text-slate-800 placeholder-[#a5b4fc]'
-                    }`}
-                    placeholder="Full Name"
-                  />
-                </div>
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {!isLogin && (
+                <motion.div
+                  key="name-field"
+                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
+                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="space-y-1">
+                    <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
+                      isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
+                    }`}>
+                      <User size={18} className={`absolute left-4 ${isDark ? 'text-slate-500' : 'text-indigo-400'}`} />
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        required={!isLogin}
+                        className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm font-semibold ${
+                          isDark ? 'text-white placeholder-slate-600' : 'text-slate-800 placeholder-[#a5b4fc]'
+                        }`}
+                        placeholder="Full Name"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Email Address */}
-            <div className="space-y-1">
+            <motion.div layout className="space-y-1">
               <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
                 isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
               }`}>
@@ -352,10 +444,10 @@ const AuthPage = () => {
                   placeholder="Yourname@gmail.com"
                 />
               </div>
-            </div>
+            </motion.div>
 
             {/* Password */}
-            <div className="space-y-1">
+            <motion.div layout className="space-y-1">
               <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
                 isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
               }`}>
@@ -372,32 +464,44 @@ const AuthPage = () => {
                   placeholder="Password"
                 />
               </div>
-            </div>
+            </motion.div>
 
             {/* Confirm Password (Sign Up Only) */}
-            {!isLogin && (
-              <div className="space-y-1">
-                <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
-                  isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
-                }`}>
-                  <Lock size={18} className={`absolute left-4 ${isDark ? 'text-slate-500' : 'text-indigo-400'}`} />
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    required={!isLogin}
-                    className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm font-semibold ${
-                      isDark ? 'text-white placeholder-slate-600' : 'text-slate-800 placeholder-[#a5b4fc]'
-                    }`}
-                    placeholder="Confirm Password"
-                  />
-                </div>
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {!isLogin && (
+                <motion.div
+                  key="confirm-password-field"
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="space-y-1">
+                    <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
+                      isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
+                    }`}>
+                      <Lock size={18} className={`absolute left-4 ${isDark ? 'text-slate-500' : 'text-indigo-400'}`} />
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        required={!isLogin}
+                        className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm font-semibold ${
+                          isDark ? 'text-white placeholder-slate-600' : 'text-slate-800 placeholder-[#a5b4fc]'
+                        }`}
+                        placeholder="Confirm Password"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Big Gradient Action Button matching image */}
-            <button
+            <motion.button
+              layout
               type="submit"
               disabled={isLoading}
               className="w-full mt-2 bg-gradient-to-r from-[#5b21b6] via-[#3b82f6] to-[#1d4ed8] text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#5b21b6]/25 hover:opacity-90 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed border-none cursor-pointer text-sm"
@@ -408,14 +512,14 @@ const AuthPage = () => {
                   <ArrowRight size={16} />
                 </span>
               )}
-            </button>
+            </motion.button>
           </form>
 
           {/* Divider */}
-          <div className={`h-px my-6 w-full ${isDark ? 'bg-[#1f1a3a]' : 'bg-[#e0e7ff]'}`} />
+          <motion.div layout className={`h-px my-6 w-full ${isDark ? 'bg-[#1f1a3a]' : 'bg-[#e0e7ff]'}`} />
 
           {/* Third-party Logins */}
-          <div className="space-y-5">
+          <motion.div layout className="space-y-5">
             <p className={`text-xs font-bold text-center opacity-70 ${isDark ? 'text-slate-400' : 'text-[#4f46e5]'}`}>
               Or continue with
             </p>
@@ -439,10 +543,10 @@ const AuthPage = () => {
               </svg>
               Google
             </button>
-          </div>
+          </motion.div>
 
           {/* Footer switcher link */}
-          <div className="mt-8 text-center text-sm md:text-base">
+          <motion.div layout className="mt-8 text-center text-sm md:text-base">
             <span className="font-semibold opacity-70">
               {isLogin ? "Don't have an account? " : "Already have an account? "}
             </span>
@@ -455,9 +559,9 @@ const AuthPage = () => {
             >
               {isLogin ? 'Sign up for free' : 'Log in here'}
             </button>
-          </div>
+          </motion.div>
 
-        </div>
+        </motion.div>
       </div>
     </div>
   );

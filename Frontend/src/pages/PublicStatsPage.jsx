@@ -52,7 +52,7 @@ const PublicStatsPage = () => {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-surface-950 text-white' : 'bg-surface-50 text-surface-900'}`}>
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-transparent text-white' : 'bg-surface-50 text-surface-900'}`}>
         <div className="flex flex-col items-center gap-3">
           <BarChart3 className="animate-pulse text-primary-500" size={48} />
           <p className="text-sm font-semibold">Loading public dashboard stats...</p>
@@ -63,7 +63,7 @@ const PublicStatsPage = () => {
 
   if (!stats) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-surface-950 text-white' : 'bg-surface-50 text-surface-900'}`}>
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-transparent text-white' : 'bg-surface-50 text-surface-900'}`}>
         <div className="text-center space-y-4 p-6 max-w-md rounded-3xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-xl">
           <LinkIcon className="mx-auto text-red-500" size={48} />
           <h2 className="text-xl font-bold">Link Not Found</h2>
@@ -107,10 +107,10 @@ const PublicStatsPage = () => {
   const maxClickVal = Math.max(...clicksByDay.map(d => d.count), 1)
 
   return (
-    <div className={`min-h-screen pb-16 ${isDark ? 'bg-surface-950 text-white' : 'bg-surface-50 text-surface-900'}`}>
+    <div className={`min-h-screen pb-16 ${isDark ? 'bg-transparent text-white' : 'bg-surface-50 text-surface-900'}`}>
       {/* Header Bar */}
       <header className={`sticky top-0 z-30 backdrop-blur-md border-b py-4 px-6 flex items-center justify-between ${
-        isDark ? 'bg-surface-950/80 border-surface-850' : 'bg-white/80 border-surface-200 shadow-sm'
+        isDark ? 'bg-surface-100/80 border-surface-850' : 'bg-white/80 border-surface-200 shadow-sm'
       }`}>
         <div className="flex items-center gap-2">
           <BarChart3 className="text-primary-500" size={24} />

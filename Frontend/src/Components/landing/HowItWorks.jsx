@@ -1,5 +1,4 @@
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { motion } from 'framer-motion'
 import { Link2, BarChart3, Share2 } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 
@@ -28,12 +27,10 @@ const steps = [
 ]
 
 const HowItWorks = () => {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, margin: '-80px' })
   const { isDark } = useTheme()
 
   return (
-    <section id="how-it-works" className="relative py-28">
+    <section id="how-it-works" className="relative py-16 md:py-20">
       <div className={`absolute inset-0 pointer-events-none ${
         isDark ? 'bg-gradient-to-b from-transparent via-primary-500/[0.02] to-transparent' : ''
       }`} />
@@ -41,10 +38,10 @@ const HowItWorks = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
         {/* Header */}
         <motion.div
-          ref={ref}
           initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-20"
         >
           <span className="text-primary-500 text-xs font-semibold tracking-widest uppercase mb-3 block">How It Works</span>
@@ -80,9 +77,10 @@ const HowItWorks = () => {
             return (
               <motion.div
                 key={step.number}
-                initial={{ opacity: 0, y: 40 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.5, delay: 0.2 + i * 0.15 }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.6, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
                 className="text-center relative"
               >
                 <div className="relative inline-flex items-center justify-center mb-8">

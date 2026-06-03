@@ -6,7 +6,7 @@ const HeroSection = () => {
   const { isDark } = useTheme()
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section id="hero" className="relative min-h-[85vh] pt-32 pb-16 md:pt-40 md:pb-20 flex items-center justify-center overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div className={`absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-[pulse-glow_6s_ease-in-out_infinite] ${
@@ -81,7 +81,7 @@ const HeroSection = () => {
       <div className={`absolute bottom-0 left-0 right-0 h-32 pointer-events-none ${
         isDark
           ? 'bg-gradient-to-t from-surface-950 to-transparent'
-          : 'bg-gradient-to-t from-white to-transparent'
+          : 'bg-gradient-to-t from-surface-50 to-transparent'
       }`} />
     </section>
   )

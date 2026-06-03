@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import { 
-  Link2, Copy, Trash2, Moon, Sun, User, Settings, LogOut, Loader2, 
-  Link as LinkIcon, Camera, X, ArrowRight, Menu, BarChart3, QrCode, 
+import {
+  Link2, Copy, Trash2, Moon, Sun, User, Settings, LogOut, Loader2,
+  Link as LinkIcon, Camera, X, ArrowRight, Menu, BarChart3, QrCode,
   Plus, Check, ExternalLink, TrendingUp, Download, Search, ChevronRight,
-  Clock, Calendar, Sparkles, History, ArrowLeft, Share2, Eye, Globe, Pencil
+  Clock, Calendar, Sparkles, History, ArrowLeft, Share2, Eye, Globe, Pencil,
+  HelpCircle
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useNavigate, Link } from 'react-router-dom'
@@ -14,14 +15,19 @@ import { API_BASE_URL } from '../config'
 import MagicBento from '../Components/MagicBento'
 import Dock from '../Components/Dock'
 import AnalyticsDashboard from '../Components/AnalyticsDashboard'
+import { motion } from 'framer-motion'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const WhatsAppIcon = ({ size = 16, className = '' }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="currentColor" 
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
     className={className}
   >
     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.454 5.709 1.455h.008c6.56 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" />
@@ -32,7 +38,7 @@ const HomePage = () => {
   const { user, logout, updateUser, isLoading: authLoading } = useAuth()
   const { isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
-  
+
   // Navigation & UI States
   const [activeTab, setActiveTab] = useState('dashboard') // dashboard, analytics, qr, settings
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -40,7 +46,7 @@ const HomePage = () => {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const shortenerInputRef = useRef(null)
-  
+
   // Create Link Form States
   const [originalUrl, setOriginalUrl] = useState('')
   const [customAlias, setCustomAlias] = useState('')
@@ -65,10 +71,10 @@ const HomePage = () => {
     }
   })
   const [searchQuery, setSearchQuery] = useState('')
-  
+
   // Analytics State
   const [selectedUrlForAnalytics, setSelectedUrlForAnalytics] = useState(null)
-  
+
   // QR States
   const [qrText, setQrText] = useState('')
   const [downloadingQr, setDownloadingQr] = useState(false)
@@ -92,13 +98,93 @@ const HomePage = () => {
   const [editExpiresAt, setEditExpiresAt] = useState('')
   const [isSavingEdit, setIsSavingEdit] = useState(false)
 
+  // How to Use Guide States
+  const [showHowToUse, setShowHowToUse] = useState(false)
+  const stepsContainerRef = useRef(null)
+  const [scrollProgress, setScrollProgress] = useState(0)
+
+  // GSAP Cinematic Scroll Animation for "How to Use" Modal
+  useEffect(() => {
+    if (showHowToUse && stepsContainerRef.current) {
+      // Prevent parent body scroll
+      document.body.style.overflow = 'hidden'
+
+      const scenes = stepsContainerRef.current.querySelectorAll('.step-scene')
+
+      // Initially hide all scenes, scaling them down
+      gsap.killTweensOf(scenes)
+      gsap.set(scenes, { opacity: 0, scale: 0.25, zIndex: 1, pointerEvents: 'none' })
+
+      // Set first scene active
+      gsap.set(scenes[0], { opacity: 1, scale: 1, zIndex: 10, pointerEvents: 'auto' })
+
+      // Set up scrolling progress handler
+      const handleScroll = () => {
+        if (!stepsContainerRef.current) return
+        const target = stepsContainerRef.current
+        const pct = (target.scrollTop / (target.scrollHeight - target.clientHeight)) * 100
+        setScrollProgress(Math.min(100, Math.max(0, pct)))
+      }
+
+      stepsContainerRef.current.addEventListener('scroll', handleScroll)
+      handleScroll() // Trigger once initially
+
+      // Create scroll-scrubbed timeline
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: stepsContainerRef.current.querySelector('.scroll-track'),
+          scroller: stepsContainerRef.current,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 1.2, // Smooth momentum scrub
+        }
+      })
+
+      // Construct fly-through morph animation
+      for (let i = 0; i < scenes.length - 1; i++) {
+        // Zoom current scene into the viewport (penetrating look) and fade out
+        tl.to(scenes[i], {
+          scale: 2.2,
+          opacity: 0,
+          duration: 1,
+          ease: 'power2.inOut',
+          pointerEvents: 'none'
+        }, i)
+          .to(scenes[i], {
+            zIndex: 1,
+            duration: 0.1
+          }, i + 0.9)
+
+          // Zoom in next scene from distance (0.25 -> 1)
+          .to(scenes[i + 1], {
+            scale: 1,
+            opacity: 1,
+            duration: 1,
+            ease: 'power2.inOut',
+            zIndex: 10,
+            pointerEvents: 'auto'
+          }, i)
+      }
+
+      return () => {
+        document.body.style.overflow = ''
+        if (stepsContainerRef.current) {
+          stepsContainerRef.current.removeEventListener('scroll', handleScroll)
+        }
+        ScrollTrigger.getAll().forEach(t => t.kill())
+      }
+    } else {
+      document.body.style.overflow = ''
+    }
+  }, [showHowToUse])
+
   useEffect(() => {
     if (selectedQrUrl) {
       const fullUrl = `${API_BASE_URL}/${selectedQrUrl.shortCode}`
       QRCode.toDataURL(
-        fullUrl, 
-        { 
-          width: 300, 
+        fullUrl,
+        {
+          width: 300,
           margin: 2,
           color: {
             dark: '#000000',
@@ -106,13 +192,13 @@ const HomePage = () => {
           }
         }
       )
-      .then(url => {
-        setQrDataUrl(url)
-      })
-      .catch(err => {
-        console.error('Failed to generate QR:', err)
-        toast.error('Failed to generate QR Code')
-      })
+        .then(url => {
+          setQrDataUrl(url)
+        })
+        .catch(err => {
+          console.error('Failed to generate QR:', err)
+          toast.error('Failed to generate QR Code')
+        })
     } else {
       setQrDataUrl('')
     }
@@ -122,6 +208,10 @@ const HomePage = () => {
   const [profileForm, setProfileForm] = useState({ name: '' })
   const [avatarBase64, setAvatarBase64] = useState('')
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
 
   const fileInputRef = useRef(null)
 
@@ -158,7 +248,7 @@ const HomePage = () => {
       if (data.success) {
         setUrls(data.urls)
         localStorage.setItem('nebula-cached-urls', JSON.stringify(data.urls))
-        
+
         // Update selected analytics URL details if one is selected
         if (selectedUrlForAnalytics) {
           const updated = data.urls.find(u => u._id === selectedUrlForAnalytics._id)
@@ -196,7 +286,7 @@ const HomePage = () => {
       toast.error('Please select a CSV file first')
       return
     }
-    
+
     setIsCsvShortening(true)
     const reader = new FileReader()
     reader.onload = async (event) => {
@@ -224,7 +314,7 @@ const HomePage = () => {
             const original = hasHeaders ? columns[originalUrlIdx] : columns[0]
             const alias = hasHeaders && customAliasIdx !== -1 ? columns[customAliasIdx] : columns[1] || ''
             const expiry = hasHeaders && expiresAtIdx !== -1 ? columns[expiresAtIdx] : columns[2] || ''
-            
+
             if (original) {
               rows.push({
                 originalUrl: original,
@@ -253,9 +343,9 @@ const HomePage = () => {
           try {
             const response = await fetch(`${API_BASE_URL}/api/urls/shorten`, {
               method: 'POST',
-              headers: { 
+              headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
+                'Authorization': `Bearer ${token}`
               },
               body: JSON.stringify(row)
             })
@@ -299,14 +389,14 @@ const HomePage = () => {
       const token = localStorage.getItem('nebula-token')
       const response = await fetch(`${API_BASE_URL}/api/urls/shorten`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
-          originalUrl, 
-          customAlias: customAlias || undefined, 
-          expiresAt: expiresAt || undefined 
+        body: JSON.stringify({
+          originalUrl,
+          customAlias: customAlias || undefined,
+          expiresAt: expiresAt || undefined
         })
       })
       if (response.status === 401) {
@@ -410,7 +500,7 @@ const HomePage = () => {
         const updatedUrls = urls.map(u => u._id === selectedUrlForEdit._id ? data.url : u)
         setUrls(updatedUrls)
         localStorage.setItem('nebula-cached-urls', JSON.stringify(updatedUrls))
-        
+
         if (selectedUrlForAnalytics?._id === selectedUrlForEdit._id) {
           setSelectedUrlForAnalytics(data.url)
         }
@@ -465,7 +555,7 @@ const HomePage = () => {
       const token = localStorage.getItem('nebula-token')
       const response = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -486,6 +576,48 @@ const HomePage = () => {
       toast.error('Server error')
     } finally {
       setIsUpdatingProfile(false)
+    }
+  }
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault()
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match')
+      return
+    }
+    setIsUpdatingPassword(true)
+    try {
+      const token = localStorage.getItem('nebula-token')
+      const response = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: profileForm.name,
+          avatar: avatarBase64,
+          currentPassword,
+          newPassword
+        })
+      })
+      if (response.status === 401) {
+        logout()
+        return
+      }
+      const data = await response.json()
+      if (response.ok && data.success) {
+        toast.success('Password updated successfully!')
+        setCurrentPassword('')
+        setNewPassword('')
+        setConfirmPassword('')
+      } else {
+        toast.error(data.message || 'Password update failed')
+      }
+    } catch (error) {
+      toast.error('Server error')
+    } finally {
+      setIsUpdatingPassword(false)
     }
   }
 
@@ -512,8 +644,8 @@ const HomePage = () => {
   }
 
   // Filtered URLs based on search
-  const filteredUrls = urls.filter(url => 
-    url.originalUrl.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredUrls = urls.filter(url =>
+    url.originalUrl.toLowerCase().includes(searchQuery.toLowerCase()) ||
     url.shortCode.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -521,7 +653,7 @@ const HomePage = () => {
   const filteredAndSortedDashboardUrls = urls
     .filter(url => {
       const matchesSearch = url.shortCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            url.originalUrl.toLowerCase().includes(searchQuery.toLowerCase())
+        url.originalUrl.toLowerCase().includes(searchQuery.toLowerCase())
       const isExpired = url.expiresAt && new Date(url.expiresAt) < new Date()
       if (dashFilterStatus === 'active') return matchesSearch && !isExpired
       if (dashFilterStatus === 'expired') return matchesSearch && isExpired
@@ -543,7 +675,7 @@ const HomePage = () => {
   const filteredAndSortedQrUrls = urls
     .filter(url => {
       const matchesSearch = url.shortCode.toLowerCase().includes(qrSearchQuery.toLowerCase()) ||
-                            url.originalUrl.toLowerCase().includes(qrSearchQuery.toLowerCase())
+        url.originalUrl.toLowerCase().includes(qrSearchQuery.toLowerCase())
       const isExpired = url.expiresAt && new Date(url.expiresAt) < new Date()
       if (qrFilterStatus === 'active') return matchesSearch && !isExpired
       if (qrFilterStatus === 'expired') return matchesSearch && isExpired
@@ -564,14 +696,14 @@ const HomePage = () => {
   // Render Full Screen Loading State to prevent redirection on refresh
   if (authLoading) {
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center transition-colors duration-500 ${isDark ? 'bg-surface-950 text-white' : 'bg-surface-50 text-surface-900'}`}>
+      <div className={`min-h-screen flex flex-col items-center justify-center transition-colors duration-500 ${isDark ? 'bg-transparent text-white' : 'bg-surface-50 text-surface-900'}`}>
         <div className="relative flex items-center justify-center">
           <div className="w-20 h-20 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin"></div>
-          <div className="absolute w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg">
+          <div className="absolute w-10 h-10 rounded-xl bg-gradient-to-br from-[#8b00e0] to-[#a400ff] flex items-center justify-center shadow-lg">
             <Link2 size={18} className="text-white" />
           </div>
         </div>
-        <p className="mt-6 font-[family-name:var(--font-display)] text-lg font-medium opacity-75 tracking-wide animate-pulse">
+        <p className="mt-6 font-sans text-lg font-medium opacity-75 tracking-wide animate-pulse">
           Loading dashboard...
         </p>
       </div>
@@ -579,75 +711,76 @@ const HomePage = () => {
   }
 
   const dockItems = [
-    { 
-      icon: <Sparkles size={20} />, 
-      label: 'Overview', 
+    {
+      icon: <Sparkles size={20} />,
+      label: 'Overview',
       onClick: () => setActiveTab('dashboard'),
       isActive: activeTab === 'dashboard'
     },
-    { 
-      icon: <Link2 size={20} />, 
-      label: 'Links', 
+    {
+      icon: <Link2 size={20} />,
+      label: 'Links',
       onClick: () => setActiveTab('links'),
       isActive: activeTab === 'links'
     },
-    { 
-      icon: <BarChart3 size={20} />, 
-      label: 'Analytics', 
+    {
+      icon: <BarChart3 size={20} />,
+      label: 'Analytics',
       onClick: () => { setSelectedUrlForAnalytics(null); setActiveTab('analytics'); },
       isActive: activeTab === 'analytics'
     },
-    { 
-      icon: <Settings size={20} />, 
-      label: 'Settings', 
+    {
+      icon: <Settings size={20} />,
+      label: 'Settings',
       onClick: () => setActiveTab('settings'),
       isActive: activeTab === 'settings'
     },
-    { 
-      icon: isDark ? <Sun size={20} /> : <Moon size={20} />, 
-      label: isDark ? 'Light Mode' : 'Dark Mode', 
+    {
+      icon: isDark ? <Sun size={20} /> : <Moon size={20} />,
+      label: isDark ? 'Light Mode' : 'Dark Mode',
       onClick: toggleTheme,
       isActive: false
     },
-    { 
-      icon: <LogOut size={20} className="text-red-500" />, 
-      label: 'Logout', 
+    {
+      icon: <LogOut size={20} className="text-red-500" />,
+      label: 'Logout',
       onClick: () => setShowLogoutConfirm(true),
       isActive: false
     }
   ]
 
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 ${isDark ? 'bg-surface-950 text-white' : 'bg-surface-50 text-surface-900'}`}>
-      
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8, ease: 'easeOut' }}
+      className={`min-h-screen flex transition-colors duration-300 ${isDark ? 'bg-transparent text-white' : 'bg-surface-50 text-surface-900'}`}
+    >
+
       {/* Sliding Sidebar Menu & Backdrop (Triggerable on Desktop & Mobile) */}
-      <div 
+      <div
         onClick={() => setSidebarOpen(false)}
-        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-350 md:hidden ${
-          sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-350 md:hidden ${sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
       />
 
-      <aside className={`fixed top-0 bottom-0 left-0 z-50 w-72 border-r flex flex-col transition-transform duration-350 ease-out shadow-2xl md:hidden ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } ${
-        isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200'
-      }`}>
+      <aside className={`fixed top-0 bottom-0 left-0 z-50 w-72 border-r flex flex-col transition-transform duration-350 ease-out shadow-2xl md:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200'
+        }`}>
         {/* Sidebar Logo */}
         <div className={`p-6 border-b flex justify-between items-center ${isDark ? 'border-surface-800' : 'border-surface-200'}`}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8b00e0] to-[#a400ff] flex items-center justify-center shadow-lg">
               <Link2 size={20} className="text-white" />
             </div>
-            <span className="font-bold font-[family-name:var(--font-display)] text-2xl tracking-tight">
+            <span className="font-bold font-sans text-2xl tracking-tight">
               Nebu<span className="gradient-text">la</span>
             </span>
           </div>
-          <button 
+          <button
             onClick={() => setSidebarOpen(false)}
-            className={`p-2 rounded-xl transition-colors border-none cursor-pointer ${
-              isDark ? 'hover:bg-surface-800 text-surface-400' : 'hover:bg-surface-100 text-surface-505'
-            }`}
+            className={`p-2 rounded-xl transition-colors border-none cursor-pointer ${isDark ? 'hover:bg-surface-800 text-surface-400' : 'hover:bg-surface-100 text-surface-505'
+              }`}
           >
             <X size={20} />
           </button>
@@ -656,9 +789,9 @@ const HomePage = () => {
         {/* User Mini-Profile */}
         <div className={`p-6 border-b flex items-center gap-4 ${isDark ? 'border-surface-800' : 'border-surface-200'}`}>
           {user?.avatar ? (
-            <img src={user.avatar} alt="Profile" className="w-12 h-12 rounded-full object-cover border-2 border-primary-500" />
+            <img src={user.avatar} alt="Profile" className="w-12 h-12 rounded-full object-cover border-2 border-violet-500" />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white font-bold text-xl shadow-md">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#8b00e0] to-[#a400ff] flex items-center justify-center text-white font-bold text-xl shadow-md">
               {user?.name?.charAt(0).toUpperCase()}
             </div>
           )}
@@ -672,11 +805,10 @@ const HomePage = () => {
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           <button
             onClick={() => { setActiveTab('dashboard'); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-sm transition-all border-none cursor-pointer text-left ${
-              activeTab === 'dashboard'
-                ? 'bg-primary-500/10 text-primary-500 font-bold'
-                : isDark ? 'text-surface-400 hover:bg-surface-800 hover:text-white' : 'text-surface-600 hover:bg-surface-100 hover:text-surface-900'
-            }`}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-sm transition-all border-none cursor-pointer text-left ${activeTab === 'dashboard'
+              ? 'bg-primary-500/10 text-primary-500 font-bold'
+              : isDark ? 'text-surface-400 hover:bg-surface-800 hover:text-white' : 'text-surface-600 hover:bg-surface-100 hover:text-surface-900'
+              }`}
           >
             <Sparkles size={20} />
             Dashboard Overview
@@ -684,11 +816,10 @@ const HomePage = () => {
 
           <button
             onClick={() => { setActiveTab('links'); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-sm transition-all border-none cursor-pointer text-left ${
-              activeTab === 'links'
-                ? 'bg-primary-500/10 text-primary-500 font-bold'
-                : isDark ? 'text-surface-400 hover:bg-surface-800 hover:text-white' : 'text-surface-600 hover:bg-surface-100 hover:text-surface-900'
-            }`}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-sm transition-all border-none cursor-pointer text-left ${activeTab === 'links'
+              ? 'bg-primary-500/10 text-primary-500 font-bold'
+              : isDark ? 'text-surface-400 hover:bg-surface-800 hover:text-white' : 'text-surface-600 hover:bg-surface-100 hover:text-surface-900'
+              }`}
           >
             <Link2 size={20} />
             URL Management
@@ -696,11 +827,10 @@ const HomePage = () => {
 
           <button
             onClick={() => { setActiveTab('analytics'); setSelectedUrlForAnalytics(null); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-sm transition-all border-none cursor-pointer text-left ${
-              activeTab === 'analytics' && !selectedUrlForAnalytics
-                ? 'bg-primary-500/10 text-primary-500 font-bold'
-                : isDark ? 'text-surface-400 hover:bg-surface-800 hover:text-white' : 'text-surface-600 hover:bg-surface-100 hover:text-surface-900'
-            }`}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-sm transition-all border-none cursor-pointer text-left ${activeTab === 'analytics' && !selectedUrlForAnalytics
+              ? 'bg-primary-500/10 text-primary-500 font-bold'
+              : isDark ? 'text-surface-400 hover:bg-surface-800 hover:text-white' : 'text-surface-600 hover:bg-surface-100 hover:text-surface-900'
+              }`}
           >
             <BarChart3 size={20} />
             Link Analytics
@@ -710,11 +840,10 @@ const HomePage = () => {
 
           <button
             onClick={() => { setActiveTab('settings'); setSidebarOpen(false); }}
-            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-sm transition-all border-none cursor-pointer text-left ${
-              activeTab === 'settings'
-                ? 'bg-primary-500/10 text-primary-500 font-bold'
-                : isDark ? 'text-surface-400 hover:bg-surface-800 hover:text-white' : 'text-surface-600 hover:bg-surface-100 hover:text-surface-900'
-            }`}
+            className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-sm transition-all border-none cursor-pointer text-left ${activeTab === 'settings'
+              ? 'bg-primary-500/10 text-primary-500 font-bold'
+              : isDark ? 'text-surface-400 hover:bg-surface-800 hover:text-white' : 'text-surface-600 hover:bg-surface-100 hover:text-surface-900'
+              }`}
           >
             <Settings size={20} />
             Account & Settings
@@ -723,11 +852,10 @@ const HomePage = () => {
 
         {/* Sidebar Footer Controls */}
         <div className={`p-4 border-t flex flex-col gap-2 ${isDark ? 'border-surface-800' : 'border-surface-200'}`}>
-          <button 
+          <button
             onClick={toggleTheme}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors border-none cursor-pointer ${
-              isDark ? 'bg-surface-800 hover:bg-surface-700 text-yellow-400' : 'bg-surface-100 hover:bg-surface-200 text-surface-600'
-            }`}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors border-none cursor-pointer ${isDark ? 'bg-surface-800 hover:bg-surface-700 text-yellow-400' : 'bg-surface-100 hover:bg-surface-200 text-surface-600'
+              }`}
           >
             <div className="flex items-center gap-3">
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -741,9 +869,8 @@ const HomePage = () => {
               setSidebarOpen(false);
               setShowLogoutConfirm(true);
             }}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all border-none cursor-pointer text-left ${
-              isDark ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'
-            }`}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all border-none cursor-pointer text-left ${isDark ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'
+              }`}
           >
             <LogOut size={18} />
             Logout
@@ -753,55 +880,77 @@ const HomePage = () => {
 
       {/* MAIN VIEW CONTAINER */}
       <div className="flex-1 flex flex-col min-w-0">
-        
+
         {/* Top Navbar */}
-        <header className={`sticky top-0 z-30 px-6 py-4 border-b flex justify-between items-center backdrop-blur-md ${
-          isDark ? 'bg-surface-950/80 border-surface-800/50' : 'bg-surface-50/80 border-surface-200'
-        }`}>
+        <header className={`sticky top-0 z-30 px-6 py-4 border-b flex justify-between items-center backdrop-blur-md ${isDark ? 'bg-transparent border-white/[0.04]' : 'bg-surface-50/80 border-surface-200'
+          }`}>
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className={`p-2.5 rounded-xl border-none cursor-pointer transition-all md:hidden ${
-                isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-white hover:bg-surface-100 text-surface-900 shadow-sm'
-              }`}
+              className={`p-2.5 rounded-xl border-none cursor-pointer transition-all md:hidden ${isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-white hover:bg-surface-100 text-surface-900 shadow-sm'
+                }`}
             >
               <Menu size={20} />
             </button>
-            
+
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7c3aed] to-[#4f46e5] flex items-center justify-center shadow-lg">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8b00e0] to-[#a400ff] flex items-center justify-center shadow-lg">
                 <Link2 size={18} className="text-white" />
               </div>
-              <span className="font-bold font-[family-name:var(--font-display)] text-2xl tracking-tight">
+              <span className="font-bold font-sans text-2xl tracking-tight">
                 Nebu<span className="gradient-text">la</span>
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowHowToUse(true)}
+              className={`px-3.5 py-1.5 rounded-xl border text-xs font-bold transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${isDark
+                ? 'bg-white/10 hover:bg-white/20 text-white border-white/5 shadow-md'
+                : 'bg-white hover:bg-surface-50 text-surface-800 border-surface-200 shadow-sm'
+                }`}
+              type="button"
+            >
+              <HelpCircle size={14} className="text-violet-500" />
+              <span>How to Use</span>
+            </button>
           </div>
         </header>
 
         {/* Content Container */}
         <main className="flex-1 p-6 md:p-8 md:pb-12 max-w-5xl w-full mx-auto">
-          
+
           {/* TAB 1: DASHBOARD OVERVIEW (SHOWS ALL SHORTENED LINKS BY DEFAULT) */}
           {activeTab === 'dashboard' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              
+
+              {/* Greeting */}
+              <div className="relative overflow-hidden rounded-3xl p-6 md:p-8 glass-card border border-violet-500/20 text-left max-w-4xl mx-auto shadow-lg">
+                {/* Floating ambient glow inside card */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="relative z-10 space-y-3">
+                  <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight font-sans">
+                    Welcome back, <span className="bg-gradient-to-r from-[#8b00e0] to-[#a400ff] bg-clip-text text-transparent">{user?.name || 'User'}</span>
+                  </h1>
+                  <p className={`text-base md:text-lg font-medium leading-relaxed max-w-2xl ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                    Here is your homepage. You can shorten links, view analytics, manage your URLs, and customize settings using the dock below.
+                  </p>
+                </div>
+              </div>
+
               {/* URL Shortener Centerpiece */}
-              <div className={`p-8 rounded-3xl border text-center space-y-6 max-w-3xl mx-auto shadow-xl relative overflow-hidden transition-all duration-300 ${
-                isDark 
-                  ? 'bg-[#120f22]/60 backdrop-blur-md border-[#231c3d]/50 shadow-[0_20px_40px_rgba(0,0,0,0.3)]' 
-                  : 'bg-white/70 backdrop-blur-md border-indigo-100/50 shadow-[0_20px_40px_-15px_rgba(99,102,241,0.06)]'
-              }`}>
+              <div className={`p-8 rounded-3xl border text-center space-y-6 max-w-4xl mx-auto shadow-xl relative overflow-hidden transition-all duration-300 ${isDark
+                ? 'glass-card border-violet-500/20 shadow-[0_20px_50px_rgba(10,4,32,0.6)]'
+                : 'bg-white/70 backdrop-blur-md border-indigo-100/50 shadow-[0_20px_40px_-15px_rgba(99,102,241,0.06)]'
+                }`}>
                 {/* Background ambient glow */}
-                <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-accent-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -top-24 -left-24 w-48 h-48 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-violet-500/5 rounded-full blur-3xl pointer-events-none" />
 
                 <div className="space-y-2 relative z-10">
-                  <h1 className="text-3xl md:text-4xl font-black tracking-tight font-[family-name:var(--font-display)]">
-                    Shorten Your <span className="gradient-text">Destination</span> URL
+                  <h1 className="text-2xl md:text-3xl font-bold tracking-tight font-sans">
+                    Shorten Your <span className="bg-gradient-to-r from-[#8b00e0] to-[#a400ff] bg-clip-text text-transparent">Destination</span> URL
                   </h1>
                   <p className={`text-sm ${isDark ? 'text-surface-400' : 'text-surface-500'} max-w-lg mx-auto`}>
                     Paste your long URL below to get a neat, tracked, and customizable shortlink instantly.
@@ -809,30 +958,28 @@ const HomePage = () => {
                 </div>
 
                 <form onSubmit={handleShorten} className="space-y-4 relative z-10">
-                  <div className={`flex flex-col sm:flex-row items-stretch gap-2.5 p-2 rounded-2xl border transition-all duration-300 ${
-                    isDark 
-                      ? 'bg-[#0a0712]/80 border-[#251e3f] focus-within:border-primary-500/50' 
-                      : 'bg-white border-slate-200 focus-within:border-primary-500/60'
-                  }`}>
+                  <div className={`flex flex-col sm:flex-row items-stretch gap-2.5 p-2 rounded-2xl border transition-all duration-300 ${isDark
+                    ? 'bg-[#10082b]/80 border-violet-500/25 focus-within:border-violet-500/50 focus-within:shadow-[0_0_15px_rgba(139,0,224,0.15)]'
+                    : 'bg-white border-slate-200 focus-within:border-violet-500/60'
+                    }`}>
                     <div className="flex-1 relative flex items-center">
                       <LinkIcon size={18} className={`absolute left-3.5 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
-                      <input 
+                      <input
                         type="url"
                         ref={shortenerInputRef}
                         value={originalUrl}
                         onChange={(e) => setOriginalUrl(e.target.value)}
                         placeholder="Paste a long link (e.g. https://example.com/very-long-path)..."
                         required
-                        className={`w-full bg-transparent border-none outline-none py-3.5 pl-11 pr-4 text-sm transition-colors duration-300 ${
-                          isDark ? 'text-white' : 'text-surface-900'
-                        }`}
+                        className={`w-full bg-transparent border-none outline-none py-3.5 pl-11 pr-4 text-sm transition-colors duration-300 ${isDark ? 'text-white' : 'text-surface-900'
+                          }`}
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={isShortening}
-                      className="px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 border-none cursor-pointer shadow-lg shadow-indigo-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                      className="px-6 py-3.5 bg-gradient-to-r from-[#8b00e0] to-[#a400ff] hover:opacity-90 active:scale-[0.98] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all duration-300 border-none cursor-pointer shadow-lg shadow-violet-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {isShortening ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
                       <span>Shorten URL</span>
@@ -844,9 +991,8 @@ const HomePage = () => {
                     <button
                       type="button"
                       onClick={() => setShowAdvanced(!showAdvanced)}
-                      className={`text-xs font-bold flex items-center gap-1.5 bg-transparent border-none cursor-pointer transition-colors duration-300 ${
-                        isDark ? 'text-surface-400 hover:text-white' : 'text-surface-500 hover:text-surface-900'
-                      }`}
+                      className={`text-xs font-bold flex items-center gap-1.5 bg-transparent border-none cursor-pointer transition-colors duration-300 ${isDark ? 'text-surface-400 hover:text-white' : 'text-surface-500 hover:text-surface-900'
+                        }`}
                     >
                       <Settings size={12} />
                       <span>{showAdvanced ? 'Hide Advanced Options' : 'Customize Alias & Expiration'}</span>
@@ -855,25 +1001,22 @@ const HomePage = () => {
 
                   {/* Advanced Options Content */}
                   {showAdvanced && (
-                    <div className={`p-5 rounded-2xl border text-left space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 ${
-                      isDark ? 'bg-[#0a0712]/60 border-[#251e3f]' : 'bg-slate-50/50 border-slate-200 shadow-inner'
-                    }`}>
+                    <div className={`p-5 rounded-2xl border text-left space-y-4 animate-in fade-in slide-in-from-top-2 duration-300 ${isDark ? 'bg-[#090616]/75 border-white/[0.07]' : 'bg-slate-50/50 border-slate-200 shadow-inner'
+                      }`}>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Custom Alias Input */}
                         <div className="space-y-1.5">
                           <label className="text-[10px] uppercase font-bold tracking-wider opacity-85">Custom Alias</label>
-                          <div className={`relative flex items-center rounded-xl border transition-colors duration-305 ${
-                            isDark ? 'bg-[#0d091a] border-[#221c3b] focus-within:border-primary-500' : 'bg-white border-slate-200 focus-within:border-primary-500'
-                          }`}>
+                          <div className={`relative flex items-center rounded-xl border transition-colors duration-305 ${isDark ? 'bg-[#070410] border-white/[0.08] focus-within:border-violet-500' : 'bg-white border-slate-200 focus-within:border-violet-500'
+                            }`}>
                             <span className={`absolute left-3.5 text-xs font-semibold ${isDark ? 'text-surface-500' : 'text-surface-400'}`}>/</span>
-                            <input 
+                            <input
                               type="text"
                               value={customAlias}
                               onChange={(e) => setCustomAlias(e.target.value)}
                               placeholder="my-custom-alias"
-                              className={`w-full bg-transparent border-none outline-none py-2.5 pl-7 pr-4 text-xs transition-colors duration-300 ${
-                                isDark ? 'text-white' : 'text-surface-900'
-                              }`}
+                              className={`w-full bg-transparent border-none outline-none py-2.5 pl-7 pr-4 text-xs transition-colors duration-300 ${isDark ? 'text-white' : 'text-surface-900'
+                                }`}
                             />
                           </div>
                         </div>
@@ -881,17 +1024,15 @@ const HomePage = () => {
                         {/* Expiration Input */}
                         <div className="space-y-1.5">
                           <label className="text-[10px] uppercase font-bold tracking-wider opacity-85">Expiration Date</label>
-                          <div className={`relative flex items-center rounded-xl border transition-colors duration-305 ${
-                            isDark ? 'bg-[#0d091a] border-[#221c3b] focus-within:border-primary-500' : 'bg-white border-slate-200 focus-within:border-primary-500'
-                          }`}>
+                          <div className={`relative flex items-center rounded-xl border transition-colors duration-305 ${isDark ? 'bg-[#070410] border-white/[0.08] focus-within:border-violet-500' : 'bg-white border-slate-200 focus-within:border-violet-500'
+                            }`}>
                             <Calendar size={14} className={`absolute left-3.5 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
-                            <input 
+                            <input
                               type="datetime-local"
                               value={expiresAt}
                               onChange={(e) => setExpiresAt(e.target.value)}
-                              className={`w-full bg-transparent border-none outline-none py-2.5 pl-9 pr-4 text-xs transition-colors duration-300 ${
-                                isDark ? 'text-white' : 'text-surface-900'
-                              }`}
+                              className={`w-full bg-transparent border-none outline-none py-2.5 pl-9 pr-4 text-xs transition-colors duration-300 ${isDark ? 'text-white' : 'text-surface-900'
+                                }`}
                             />
                           </div>
                         </div>
@@ -902,9 +1043,9 @@ const HomePage = () => {
               </div>
 
               {/* Main Links List Container */}
-              <div className={`p-6 rounded-3xl border ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'}`}>
+              <div className="p-6 rounded-3xl glass-card">
                 <div className="flex items-center justify-between gap-4 mb-6">
-                  <h3 className="text-xl font-black font-[family-name:var(--font-display)]">Recent Shortlinks</h3>
+                  <h3 className="text-xl font-black font-sans">Recent Shortlinks</h3>
                 </div>
 
                 {loadingUrls ? (
@@ -923,43 +1064,41 @@ const HomePage = () => {
                       {recentDashboardUrls.map((url) => {
                         const isExpired = url.expiresAt && new Date(url.expiresAt) < new Date()
                         return (
-                          <div 
-                            key={url._id} 
-                            className={`p-5 rounded-2xl border transition-all duration-200 hover:shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                              isDark 
-                                ? 'bg-surface-900 border-surface-800 hover:border-surface-700' 
-                                : 'bg-white border-surface-200 hover:shadow-surface-200/50'
-                            }`}
+                          <div
+                            key={url._id}
+                            className={`p-5 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-305 ${isDark
+                              ? 'bg-[#0f0a24]/40 border-white/[0.06] hover:bg-[#130d2e]/60 hover:border-violet-500/35 hover:shadow-[0_8px_24px_rgba(139,0,224,0.12)]'
+                              : 'bg-white/10 border-white/20 hover:bg-white/20 hover:border-violet-500/20 shadow-sm'
+                              }`}
                           >
                             {/* Left: Icon & URL Details */}
                             <div className="flex items-start gap-4 min-w-0 flex-1">
-                              <div className="p-3 rounded-xl bg-primary-500/10 text-primary-500 shrink-0 mt-0.5">
+                              <div className="p-3 rounded-xl bg-violet-500/10 text-violet-500 shrink-0 mt-0.5">
                                 <LinkIcon size={20} />
                               </div>
                               <div className="min-w-0 flex-1 space-y-1.5">
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <a 
+                                  <a
                                     href={`${API_BASE_URL}/${url.shortCode}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="font-bold text-base text-primary-500 hover:text-primary-400 no-underline inline-flex items-center gap-1"
+                                    className="font-bold text-base text-violet-550 hover:text-violet-400 no-underline inline-flex items-center gap-1"
                                   >
                                     neb.la/{url.shortCode}
                                     <ExternalLink size={12} className="opacity-75" />
                                   </a>
-                                  
+
                                   {/* Status Badge */}
                                   {url.expiresAt ? (
-                                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                      isExpired 
-                                        ? 'bg-red-500/10 text-red-500' 
-                                        : 'bg-green-500/10 text-green-500'
-                                    }`}>
+                                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${isExpired
+                                      ? 'bg-red-500/10 text-red-500'
+                                      : 'bg-green-500/10 text-green-500'
+                                      }`}>
                                       <Clock size={10} />
                                       {isExpired ? 'Expired' : 'Active'}
                                     </span>
                                   ) : (
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500">
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-500">
                                       Permanent
                                     </span>
                                   )}
@@ -967,7 +1106,7 @@ const HomePage = () => {
                                 <p className={`text-xs truncate opacity-75 max-w-[280px] sm:max-w-md md:max-w-lg ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
                                   {url.originalUrl}
                                 </p>
-                                
+
                                 {/* Meta Details Row */}
                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] opacity-60">
                                   <span>Created: {new Date(url.createdAt).toLocaleDateString()}</span>
@@ -984,77 +1123,77 @@ const HomePage = () => {
                             <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-none pt-3 md:pt-0 border-dashed border-surface-200 dark:border-surface-800">
                               {/* Actions bar */}
                               <div className="flex items-center gap-2">
-                                <button 
+                                <button
                                   onClick={() => handleCopy(url.shortCode, url._id)}
-                                  className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                    copiedId === url._id 
-                                      ? 'bg-green-500 text-white shadow-md' 
-                                      : isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-900'
-                                  }`}
+                                  className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${copiedId === url._id
+                                    ? 'bg-green-600 text-white shadow-md'
+                                    : isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
+                                    }`}
                                   title="Copy Link"
+                                  type="button"
                                 >
                                   {copiedId === url._id ? <Check size={14} /> : <Copy size={14} />}
                                 </button>
 
-                                <button 
+                                <button
                                   onClick={() => setSelectedQrUrl(url)}
-                                  className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                    isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-900'
-                                  }`}
+                                  className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
+                                    }`}
                                   title="View QR Code"
+                                  type="button"
                                 >
                                   <QrCode size={14} />
                                 </button>
 
-                                 <button 
+                                <button
                                   onClick={() => handleWhatsAppShare(`${API_BASE_URL}/${url.shortCode}`)}
-                                  className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                    isDark ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600'
-                                  }`}
+                                  className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${isDark ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400' : 'bg-emerald-55/40 hover:bg-emerald-55/70 text-emerald-600 shadow-sm'
+                                    }`}
                                   title="Share on WhatsApp"
+                                  type="button"
                                 >
                                   <WhatsAppIcon size={14} />
                                 </button>
 
-                                <button 
+                                <button
                                   onClick={() => handleSystemShare(`${API_BASE_URL}/${url.shortCode}`)}
-                                  className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                    isDark ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
-                                  }`}
+                                  className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-violet-500/10 hover:bg-violet-500/20 text-violet-400' : 'bg-violet-55/40 hover:bg-violet-55/70 text-violet-650 shadow-sm'
+                                    }`}
                                   title="Share Link"
+                                  type="button"
                                 >
                                   <Share2 size={14} />
                                 </button>
-                                
-                                <button 
+
+                                <button
                                   onClick={() => {
                                     setSelectedUrlForAnalytics(url);
                                     setActiveTab('analytics');
                                   }}
-                                  className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                    isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-900'
-                                  }`}
+                                  className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
+                                    }`}
                                   title="View Analytics"
+                                  type="button"
                                 >
                                   <BarChart3 size={14} />
                                 </button>
-                                
-                                <button 
+
+                                <button
                                   onClick={() => handleEditClick(url)}
-                                  className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                    isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-900'
-                                  }`}
+                                  className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
+                                    }`}
                                   title="Edit URL"
+                                  type="button"
                                 >
                                   <Pencil size={14} />
                                 </button>
-                                
-                                <button 
+
+                                <button
                                   onClick={() => handleDelete(url._id)}
-                                  className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                    isDark ? 'bg-red-500/10 hover:bg-red-500/25 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-500'
-                                  }`}
+                                  className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'bg-red-55/40 hover:bg-red-55/70 text-red-600 shadow-sm'
+                                    }`}
                                   title="Delete URL"
+                                  type="button"
                                 >
                                   <Trash2 size={14} />
                                 </button>
@@ -1064,16 +1203,15 @@ const HomePage = () => {
                         )
                       })}
                     </div>
-                    
+
                     {urls.length > 3 && (
                       <div className="flex justify-center pt-4">
-                        <button 
+                        <button
                           onClick={() => setActiveTab('links')}
-                          className={`px-5 py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                            isDark 
-                              ? 'bg-surface-850 hover:bg-surface-800 text-white border-surface-750' 
-                              : 'bg-surface-50 hover:bg-surface-100 text-surface-800 border-surface-200 shadow-sm'
-                          }`}
+                          className={`px-5 py-2.5 rounded-xl border text-xs font-bold transition-all duration-300 cursor-pointer flex items-center gap-1.5 ${isDark
+                            ? 'bg-white/10 hover:bg-white/20 text-white border-white/5'
+                            : 'bg-white/20 hover:bg-white/30 text-surface-800 border-white/30 shadow-sm'
+                            }`}
                         >
                           <span>View All Shortlinks</span>
                           <ChevronRight size={14} />
@@ -1083,6 +1221,7 @@ const HomePage = () => {
                   </div>
                 )}
               </div>
+
             </div>
           )}
 
@@ -1090,53 +1229,52 @@ const HomePage = () => {
           {activeTab === 'links' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
               {/* Main Links List Container */}
-              <div className={`p-6 md:p-8 rounded-3xl border ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'}`}>
-                
+              <div className="p-6 md:p-8 rounded-3xl glass-card">
+
                 {/* Bulk CSV Shortening Widget */}
-                <div className={`mb-8 p-6 rounded-3xl border ${
-                  isDark ? 'bg-surface-950/40 border-surface-800' : 'bg-surface-50 border-surface-150 shadow-inner'
-                }`}>
+                <div className="mb-8 p-6 rounded-3xl glass-card">
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
                       <h4 className="font-bold text-sm">Bulk URL Shortening</h4>
-                      <p className={`text-xs mt-0.5 ${isDark ? 'text-surface-450' : 'text-surface-500'}`}>
+                      <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                         Upload a CSV containing originalUrl, customAlias (optional), and expiresAt (optional).
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       {csvFile ? (
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-primary-500/10 text-primary-500 max-w-[150px] truncate">
+                          <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-violet-500/10 text-violet-500 max-w-[150px] truncate">
                             {csvFile.name}
                           </span>
-                          <button 
+                          <button
                             onClick={processCsvShortening}
                             disabled={isCsvShortening}
-                            className="px-4 py-2 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white rounded-xl text-xs font-bold border-none cursor-pointer flex items-center gap-2"
+                            className="px-4 py-2 bg-gradient-to-r from-[#8b00e0] to-[#a400ff] hover:opacity-90 text-white rounded-xl text-xs font-bold border-none cursor-pointer flex items-center gap-2"
+                            type="button"
                           >
                             {isCsvShortening ? <Loader2 size={12} className="animate-spin" /> : null}
                             Start Import
                           </button>
-                          <button 
+                          <button
                             onClick={() => setCsvFile(null)}
                             disabled={isCsvShortening}
-                            className={`p-2 rounded-xl border text-xs font-bold cursor-pointer ${
-                              isDark ? 'bg-surface-850 hover:bg-surface-800 text-white border-surface-750' : 'bg-white hover:bg-surface-50 text-surface-700 border-surface-200 shadow-sm'
-                            }`}
+                            className={`p-2 rounded-xl border text-xs font-bold cursor-pointer transition-all duration-305 ${isDark ? 'bg-white/10 hover:bg-white/20 text-white border-white/5' : 'bg-white/20 hover:bg-white/30 text-surface-700 border-white/30 shadow-sm'
+                              }`}
+                            type="button"
                           >
                             Cancel
                           </button>
                         </div>
                       ) : (
-                        <label className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white text-xs font-bold transition-all border-none cursor-pointer shadow-md hover:shadow-lg flex items-center gap-1.5">
+                        <label className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#8b00e0] to-[#a400ff] hover:opacity-90 text-white text-xs font-bold transition-all border-none cursor-pointer shadow-md shadow-violet-500/25 flex items-center gap-1.5">
                           <Plus size={14} />
                           Upload CSV
-                          <input 
-                            type="file" 
-                            accept=".csv" 
-                            onChange={handleCsvUpload} 
-                            className="hidden" 
+                          <input
+                            type="file"
+                            accept=".csv"
+                            onChange={handleCsvUpload}
+                            className="hidden"
                           />
                         </label>
                       )}
@@ -1151,9 +1289,9 @@ const HomePage = () => {
                         <span className="text-emerald-500">Success: {csvShorteningProgress.successes} • Failed: {csvShorteningProgress.failures}</span>
                       </div>
                       <div className={`w-full h-2 rounded-full overflow-hidden ${isDark ? 'bg-surface-900' : 'bg-surface-200'}`}>
-                        <div 
+                        <div
                           style={{ width: `${(csvShorteningProgress.current / csvShorteningProgress.total) * 100}%` }}
-                          className="h-full bg-primary-500 rounded-full transition-all duration-300"
+                          className="h-full bg-violet-500 rounded-full transition-all duration-300"
                         />
                       </div>
                     </div>
@@ -1161,20 +1299,19 @@ const HomePage = () => {
                 </div>
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
                   <div>
-                    <h3 className="text-2xl font-black font-[family-name:var(--font-display)]">URL Management</h3>
+                    <h3 className="text-2xl font-black font-sans">URL Management</h3>
                     <p className={`text-xs mt-1 ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
                       View, search, filter, sort, share or delete all your shortened links.
                     </p>
                   </div>
-                  
+
                   {/* Search, Filter, and Sort Controls */}
                   <div className="flex flex-wrap items-center gap-3">
                     {/* Search Bar */}
-                    <div className={`relative flex items-center rounded-xl border transition-all w-full sm:w-60 ${
-                      isDark ? 'bg-surface-950 border-surface-800 focus-within:border-primary-500' : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-sm'
-                    }`}>
+                    <div className={`relative flex items-center rounded-xl border transition-all duration-300 w-full sm:w-60 ${isDark ? 'bg-[#0d091a] border-[#221c3b] focus-within:border-violet-500/50' : 'bg-white/20 border-white/30 focus-within:border-violet-500/50 shadow-sm'
+                      }`}>
                       <Search size={14} className={`absolute left-3.5 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
-                      <input 
+                      <input
                         type="text"
                         placeholder="Search links..."
                         value={searchQuery}
@@ -1187,11 +1324,10 @@ const HomePage = () => {
                     <select
                       value={dashFilterStatus}
                       onChange={(e) => setDashFilterStatus(e.target.value)}
-                      className={`px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer outline-none transition-all ${
-                        isDark 
-                          ? 'bg-surface-950 border-surface-800 text-white hover:bg-surface-850' 
-                          : 'bg-white border-surface-200 text-surface-700 hover:bg-surface-50'
-                      }`}
+                      className={`px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer outline-none transition-all duration-300 ${isDark
+                        ? 'bg-[#0d091a] border-[#221c3b] text-white hover:bg-[#16102b]'
+                        : 'bg-white/20 border-white/30 text-surface-700 hover:bg-white/40 shadow-sm'
+                        }`}
                     >
                       <option value="all">All Statuses</option>
                       <option value="active">Active Only</option>
@@ -1202,11 +1338,10 @@ const HomePage = () => {
                     <select
                       value={dashSortBy}
                       onChange={(e) => setDashSortBy(e.target.value)}
-                      className={`px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer outline-none transition-all ${
-                        isDark 
-                          ? 'bg-surface-950 border-surface-800 text-white hover:bg-surface-850' 
-                          : 'bg-white border-surface-200 text-surface-700 hover:bg-surface-50'
-                      }`}
+                      className={`px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer outline-none transition-all duration-300 ${isDark
+                        ? 'bg-[#0d091a] border-[#221c3b] text-white hover:bg-[#16102b]'
+                        : 'bg-white/20 border-white/30 text-surface-700 hover:bg-white/40 shadow-sm'
+                        }`}
                     >
                       <option value="newest">Newest First</option>
                       <option value="oldest">Oldest First</option>
@@ -1226,152 +1361,149 @@ const HomePage = () => {
                     <p className="text-sm font-semibold">No shortened URLs found</p>
                     <p className={`text-xs mt-1 ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>Try altering your search or filters.</p>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredAndSortedDashboardUrls.map((url) => {
-                      const isExpired = url.expiresAt && new Date(url.expiresAt) < new Date()
-                      return (
-                        <div 
-                          key={url._id} 
-                          className={`p-5 rounded-2xl border transition-all duration-200 hover:shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 ${
-                            isDark 
-                              ? 'bg-surface-900 border-surface-800 hover:border-surface-700' 
-                              : 'bg-white border-surface-200 hover:shadow-surface-200/50'
+                ) : (<div className="space-y-4">
+                  {filteredAndSortedDashboardUrls.map((url) => {
+                    const isExpired = url.expiresAt && new Date(url.expiresAt) < new Date()
+                    return (
+                      <div
+                        key={url._id}
+                        className={`p-5 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-305 ${isDark
+                          ? 'bg-[#0f0a24]/40 border-white/[0.06] hover:bg-[#130d2e]/60 hover:border-violet-500/35 hover:shadow-[0_8px_24px_rgba(139,0,224,0.12)]'
+                          : 'bg-white/10 border-white/20 hover:bg-white/20 hover:border-violet-500/20 shadow-sm'
                           }`}
-                        >
-                          {/* Left: Icon & URL Details */}
-                          <div className="flex items-start gap-4 min-w-0 flex-1">
-                            <div className="p-3 rounded-xl bg-primary-500/10 text-primary-500 shrink-0 mt-0.5">
-                              <LinkIcon size={20} />
-                            </div>
-                            <div className="min-w-0 flex-1 space-y-1.5">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <a 
-                                  href={`${API_BASE_URL}/${url.shortCode}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="font-bold text-base text-primary-500 hover:text-primary-400 no-underline inline-flex items-center gap-1"
-                                >
-                                  neb.la/{url.shortCode}
-                                  <ExternalLink size={12} className="opacity-75" />
-                                </a>
-                                
-                                {/* Status Badge */}
-                                {url.expiresAt ? (
-                                  <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                    isExpired 
-                                      ? 'bg-red-500/10 text-red-500' 
-                                      : 'bg-green-500/10 text-green-500'
-                                  }`}>
-                                    <Clock size={10} />
-                                    {isExpired ? 'Expired' : 'Active'}
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500">
-                                    Permanent
-                                  </span>
-                                )}
-                              </div>
-                              <p className={`text-xs truncate opacity-75 max-w-[280px] sm:max-w-md md:max-w-lg ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
-                                {url.originalUrl}
-                              </p>
-                              
-                              {/* Meta Details Row */}
-                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] opacity-60">
-                                <span>Created: {new Date(url.createdAt).toLocaleDateString()}</span>
-                                {url.expiresAt && (
-                                  <span className={isExpired ? 'text-red-550' : ''}>
-                                    Expires: {new Date(url.expiresAt).toLocaleDateString()}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
+                      >
+                        {/* Left: Icon & URL Details */}
+                        <div className="flex items-start gap-4 min-w-0 flex-1">
+                          <div className="p-3 rounded-xl bg-violet-500/10 text-violet-500 shrink-0 mt-0.5">
+                            <LinkIcon size={20} />
                           </div>
+                          <div className="min-w-0 flex-1 space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <a
+                                href={`${API_BASE_URL}/${url.shortCode}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-bold text-base text-violet-555 hover:text-violet-400 no-underline inline-flex items-center gap-1"
+                              >
+                                neb.la/{url.shortCode}
+                                <ExternalLink size={12} className="opacity-75" />
+                              </a>
 
-                          {/* Right: Actions */}
-                          <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-none pt-3 md:pt-0 border-dashed border-surface-200 dark:border-surface-800">
-                            {/* Actions bar */}
-                            <div className="flex items-center gap-2">
-                              <button 
-                                onClick={() => handleCopy(url.shortCode, url._id)}
-                                className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                  copiedId === url._id 
-                                    ? 'bg-green-500 text-white shadow-md' 
-                                    : isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-900'
-                                }`}
-                                title="Copy Link"
-                              >
-                                {copiedId === url._id ? <Check size={14} /> : <Copy size={14} />}
-                              </button>
+                              {/* Status Badge */}
+                              {url.expiresAt ? (
+                                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${isExpired
+                                  ? 'bg-red-500/10 text-red-500'
+                                  : 'bg-green-500/10 text-green-500'
+                                  }`}>
+                                  <Clock size={10} />
+                                  {isExpired ? 'Expired' : 'Active'}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-500">
+                                  Permanent
+                                </span>
+                              )}
+                            </div>
+                            <p className={`text-xs truncate opacity-75 max-w-[280px] sm:max-w-md md:max-w-lg ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
+                              {url.originalUrl}
+                            </p>
 
-                              <button 
-                                onClick={() => setSelectedQrUrl(url)}
-                                className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                  isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-900'
-                                }`}
-                                title="View QR Code"
-                              >
-                                <QrCode size={14} />
-                              </button>
-
-                              <button 
-                                onClick={() => handleWhatsAppShare(`${API_BASE_URL}/${url.shortCode}`)}
-                                className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                  isDark ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600'
-                                }`}
-                                title="Share on WhatsApp"
-                              >
-                                <WhatsAppIcon size={14} />
-                              </button>
-
-                              <button 
-                                onClick={() => handleSystemShare(`${API_BASE_URL}/${url.shortCode}`)}
-                                className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                  isDark ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
-                                }`}
-                                title="Share Link"
-                              >
-                                <Share2 size={14} />
-                              </button>
-                              
-                              <button 
-                                onClick={() => {
-                                  setSelectedUrlForAnalytics(url);
-                                  setActiveTab('analytics');
-                                }}
-                                className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                  isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-900'
-                                }`}
-                                title="View Analytics"
-                              >
-                                <BarChart3 size={14} />
-                              </button>
-                              
-                              <button 
-                                onClick={() => handleEditClick(url)}
-                                className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                  isDark ? 'bg-surface-800 hover:bg-surface-700 text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-900'
-                                }`}
-                                title="Edit URL"
-                              >
-                                <Pencil size={14} />
-                              </button>
-
-                              <button 
-                                onClick={() => handleDelete(url._id)}
-                                className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
-                                  isDark ? 'bg-red-500/10 hover:bg-red-500/25 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-550'
-                                }`}
-                                title="Delete URL"
-                              >
-                                <Trash2 size={14} />
-                              </button>
+                            {/* Meta Details Row */}
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] opacity-60">
+                              <span>Created: {new Date(url.createdAt).toLocaleDateString()}</span>
+                              {url.expiresAt && (
+                                <span className={isExpired ? 'text-red-550' : ''}>
+                                  Expires: {new Date(url.expiresAt).toLocaleDateString()}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
-                      )
-                    })}
-                  </div>
+
+                        {/* Right: Actions */}
+                        <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-none pt-3 md:pt-0 border-dashed border-surface-200 dark:border-surface-800">
+                          {/* Actions bar */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleCopy(url.shortCode, url._id)}
+                              className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${copiedId === url._id
+                                ? 'bg-green-600 text-white shadow-md'
+                                : isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
+                                }`}
+                              title="Copy Link"
+                              type="button"
+                            >
+                              {copiedId === url._id ? <Check size={14} /> : <Copy size={14} />}
+                            </button>
+
+                            <button
+                              onClick={() => setSelectedQrUrl(url)}
+                              className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
+                                }`}
+                              title="View QR Code"
+                              type="button"
+                            >
+                              <QrCode size={14} />
+                            </button>
+
+                            <button
+                              onClick={() => handleWhatsAppShare(`${API_BASE_URL}/${url.shortCode}`)}
+                              className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${isDark ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400' : 'bg-emerald-55/40 hover:bg-emerald-55/70 text-emerald-600 shadow-sm'
+                                }`}
+                              title="Share on WhatsApp"
+                              type="button"
+                            >
+                              <WhatsAppIcon size={14} />
+                            </button>
+
+                            <button
+                              onClick={() => handleSystemShare(`${API_BASE_URL}/${url.shortCode}`)}
+                              className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-violet-500/10 hover:bg-violet-500/20 text-violet-400' : 'bg-violet-55/40 hover:bg-violet-55/70 text-violet-650 shadow-sm'
+                                }`}
+                              title="Share Link"
+                              type="button"
+                            >
+                              <Share2 size={14} />
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setSelectedUrlForAnalytics(url);
+                                setActiveTab('analytics');
+                              }}
+                              className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
+                                }`}
+                              title="View Analytics"
+                              type="button"
+                            >
+                              <BarChart3 size={14} />
+                            </button>
+
+                            <button
+                              onClick={() => handleEditClick(url)}
+                              className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
+                                }`}
+                              title="Edit URL"
+                              type="button"
+                            >
+                              <Pencil size={14} />
+                            </button>
+
+                            <button
+                              onClick={() => handleDelete(url._id)}
+                              className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'bg-red-55/40 hover:bg-red-55/70 text-red-600 shadow-sm'
+                                }`}
+                              title="Delete URL"
+                              type="button"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
                 )}
               </div>
             </div>
@@ -1404,18 +1536,16 @@ const HomePage = () => {
                 {urls.length > 0 && (
                   <div className="flex flex-wrap items-center gap-3">
                     {/* Search Input */}
-                    <div className={`relative flex items-center rounded-xl border transition-colors w-full sm:w-64 ${
-                      isDark ? 'bg-surface-900 border-surface-800 focus-within:border-primary-500' : 'bg-white border-surface-200 focus-within:border-primary-500'
-                    }`}>
+                    <div className={`relative flex items-center rounded-xl border transition-colors w-full sm:w-64 ${isDark ? 'bg-surface-900 border-surface-800 focus-within:border-primary-500' : 'bg-white border-surface-200 focus-within:border-primary-500'
+                      }`}>
                       <Search size={14} className={`absolute left-3.5 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
-                      <input 
+                      <input
                         type="text"
                         value={qrSearchQuery}
                         onChange={(e) => setQrSearchQuery(e.target.value)}
                         placeholder="Search QR Library..."
-                        className={`w-full bg-transparent border-none outline-none py-2 pl-9 pr-4 text-xs ${
-                          isDark ? 'text-white' : 'text-surface-900'
-                        }`}
+                        className={`w-full bg-transparent border-none outline-none py-2 pl-9 pr-4 text-xs ${isDark ? 'text-white' : 'text-surface-900'
+                          }`}
                       />
                     </div>
 
@@ -1423,11 +1553,10 @@ const HomePage = () => {
                     <select
                       value={qrFilterStatus}
                       onChange={(e) => setQrFilterStatus(e.target.value)}
-                      className={`px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer outline-none transition-all ${
-                        isDark 
-                          ? 'bg-surface-900 border-surface-800 text-white hover:bg-surface-850' 
-                          : 'bg-white border-surface-200 text-surface-700 hover:bg-surface-50'
-                      }`}
+                      className={`px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer outline-none transition-all ${isDark
+                        ? 'bg-surface-900 border-surface-800 text-white hover:bg-surface-850'
+                        : 'bg-white border-surface-200 text-surface-700 hover:bg-surface-50'
+                        }`}
                     >
                       <option value="all">All Links</option>
                       <option value="active">Active Only</option>
@@ -1438,11 +1567,10 @@ const HomePage = () => {
                     <select
                       value={qrSortBy}
                       onChange={(e) => setQrSortBy(e.target.value)}
-                      className={`px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer outline-none transition-all ${
-                        isDark 
-                          ? 'bg-surface-900 border-surface-800 text-white hover:bg-surface-850' 
-                          : 'bg-white border-surface-200 text-surface-700 hover:bg-surface-50'
-                      }`}
+                      className={`px-3 py-2 rounded-xl border text-xs font-semibold cursor-pointer outline-none transition-all ${isDark
+                        ? 'bg-surface-900 border-surface-800 text-white hover:bg-surface-850'
+                        : 'bg-white border-surface-200 text-surface-700 hover:bg-surface-50'
+                        }`}
                     >
                       <option value="newest">Newest First</option>
                       <option value="oldest">Oldest First</option>
@@ -1454,15 +1582,14 @@ const HomePage = () => {
               </div>
 
               {urls.length === 0 ? (
-                <div className={`p-12 text-center rounded-3xl border ${
-                  isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
-                }`}>
+                <div className={`p-12 text-center rounded-3xl border ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
+                  }`}>
                   <QrCode size={48} className="mx-auto text-primary-500 mb-4 opacity-50" />
                   <h3 className="text-lg font-bold mb-1">No Links Shortened Yet</h3>
                   <p className={`text-sm mb-6 ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
                     Create your first shortened URL to generate dynamic QR codes.
                   </p>
-                  <button 
+                  <button
                     onClick={() => {
                       setActiveTab('dashboard');
                       setTimeout(() => shortenerInputRef.current?.focus(), 100);
@@ -1474,9 +1601,8 @@ const HomePage = () => {
                   </button>
                 </div>
               ) : filteredAndSortedQrUrls.length === 0 ? (
-                <div className={`p-12 text-center rounded-3xl border ${
-                  isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
-                }`}>
+                <div className={`p-12 text-center rounded-3xl border ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
+                  }`}>
                   <Search size={36} className="mx-auto text-surface-400 mb-3 opacity-50" />
                   <h3 className="text-base font-bold mb-1">No matches found</h3>
                   <p className={`text-xs ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
@@ -1486,11 +1612,10 @@ const HomePage = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredAndSortedQrUrls.map((url) => (
-                    <div 
-                      key={url._id} 
-                      className={`p-6 rounded-3xl border transition-all hover:scale-[1.01] hover:shadow-lg flex flex-col justify-between ${
-                        isDark ? 'bg-surface-900 border-surface-800 hover:border-surface-700' : 'bg-white border-surface-200 shadow-sm hover:shadow-surface-200/50'
-                      }`}
+                    <div
+                      key={url._id}
+                      className={`p-6 rounded-3xl border transition-all hover:scale-[1.01] hover:shadow-lg flex flex-col justify-between ${isDark ? 'bg-surface-900 border-surface-800 hover:border-surface-700' : 'bg-white border-surface-200 shadow-sm hover:shadow-surface-200/50'
+                        }`}
                     >
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
@@ -1504,13 +1629,13 @@ const HomePage = () => {
                             </p>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center justify-between border-t pt-4 border-dashed border-surface-200 dark:border-surface-800">
                           <span className={`text-xs ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
                             {new Date(url.createdAt).toLocaleDateString()}
                           </span>
-                          
-                          <button 
+
+                          <button
                             onClick={() => setSelectedQrUrl(url)}
                             className="px-4 py-2 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-xs font-bold transition-all border-none cursor-pointer shadow-md hover:shadow-lg"
                           >
@@ -1529,103 +1654,217 @@ const HomePage = () => {
           {activeTab === 'settings' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
               
-              <div className={`p-8 rounded-3xl border shadow-xl ${
-                isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200'
-              }`}>
-                <h3 className="text-2xl font-bold mb-6 font-[family-name:var(--font-display)]">Account Settings</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
-                <form onSubmit={handleUpdateProfile} className="space-y-6 max-w-lg">
-                  {/* Photo Edit */}
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                      {avatarBase64 ? (
-                        <img src={avatarBase64} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-4 border-primary-500/30" />
-                      ) : (
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white font-bold text-3xl shadow-md">
-                          {profileForm.name.charAt(0).toUpperCase() || 'U'}
+                {/* Profile Details Card */}
+                <div className={`p-8 rounded-[32px] border transition-all duration-300 shadow-2xl flex flex-col justify-between ${
+                  isDark 
+                    ? 'bg-surface-900/40 border-violet-500/10 hover:border-violet-500/20 text-white' 
+                    : 'bg-white border-surface-200 shadow-[0_15px_30px_rgba(0,0,0,0.02)]'
+                }`}>
+                  <div>
+                    <div className="flex items-center gap-3.5 mb-8">
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-violet-500/20">
+                        <User size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold tracking-tight font-sans">Profile Details</h3>
+                        <p className={`text-xs ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>Manage your account credentials</p>
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleUpdateProfile} className="space-y-6">
+                      {/* Photo Edit */}
+                      <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl bg-violet-500/5 border border-violet-500/10">
+                        <div className="relative group cursor-pointer w-20 h-20" onClick={() => fileInputRef.current?.click()}>
+                          {avatarBase64 ? (
+                            <img src={avatarBase64} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-2 border-violet-500" />
+                          ) : (
+                            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#8b00e0] to-[#a400ff] flex items-center justify-center text-white font-bold text-3xl shadow-md">
+                              {profileForm.name.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Camera className="text-white" size={20} />
+                          </div>
                         </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Camera className="text-white" size={20} />
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                          accept="image/jpeg, image/png, image/webp"
+                          className="hidden"
+                        />
+                        <div className="text-center sm:text-left space-y-1.5">
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className={`text-xs px-3.5 py-2 rounded-xl border font-bold cursor-pointer transition-all ${
+                              isDark 
+                                ? 'bg-surface-800/80 border-surface-700 hover:bg-surface-700 text-white' 
+                                : 'bg-white border-surface-200 hover:bg-surface-50 text-surface-700 shadow-sm'
+                            }`}
+                          >
+                            Choose Image
+                          </button>
+                          <p className={`text-[10px] ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>Supported: JPEG, PNG, WEBP (Max 2MB)</p>
+                        </div>
                       </div>
-                    </div>
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      onChange={handleFileChange} 
-                      accept="image/jpeg, image/png, image/webp" 
-                      className="hidden" 
-                    />
-                    <div>
-                      <button 
-                        type="button" 
-                        onClick={() => fileInputRef.current?.click()}
-                        className={`text-xs px-3 py-1.5 rounded-lg border font-semibold cursor-pointer ${
-                          isDark ? 'bg-surface-800 border-surface-700 hover:bg-surface-700 text-white' : 'bg-white border-surface-200 hover:bg-surface-50 text-surface-700'
-                        }`}
+
+                      {/* Display Name */}
+                      <div className="space-y-2">
+                        <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Display Name</label>
+                        <div className={`relative flex items-center rounded-2xl border transition-colors ${
+                          isDark 
+                            ? 'bg-[#120f26]/40 border-violet-500/20 focus-within:border-primary-500' 
+                            : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                        }`}>
+                          <User size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                          <input
+                            type="text"
+                            value={profileForm.name}
+                            onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                            required
+                            className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm ${isDark ? 'text-white' : 'text-surface-900'}`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Email Address */}
+                      <div className="space-y-2">
+                        <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Email Address</label>
+                        <div className={`relative flex items-center rounded-2xl border opacity-70 ${
+                          isDark 
+                            ? 'bg-[#120f26]/20 border-surface-800' 
+                            : 'bg-surface-50 border-surface-150 shadow-inner'
+                        }`}>
+                          <Globe size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                          <input
+                            type="email"
+                            value={user?.email || ''}
+                            disabled
+                            className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm cursor-not-allowed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isUpdatingProfile}
+                        className="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold px-6 py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-75 disabled:cursor-not-allowed border-none cursor-pointer shadow-lg shadow-primary-500/25"
                       >
-                        Upload Picture
+                        {isUpdatingProfile ? <Loader2 size={18} className="animate-spin" /> : 'Save Profile Changes'}
                       </button>
-                      <p className={`text-[10px] mt-1.5 ${isDark ? 'text-surface-450' : 'text-surface-500'}`}>JPEG, PNG or WEBP. Max size 2MB.</p>
-                    </div>
+                    </form>
                   </div>
+                </div>
 
-                  {/* Form fields */}
-                  <div className="space-y-4">
-                    <div>
-                      <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-surface-405' : 'text-surface-600'}`}>Display Name</label>
-                      <div className={`relative flex items-center rounded-xl border transition-colors ${
-                        isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
-                      }`}>
-                        <User size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
-                        <input
-                          type="text"
-                          value={profileForm.name}
-                          onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                          required
-                          className={`w-full bg-transparent border-none outline-none py-3.5 pl-11 pr-4 text-sm ${isDark ? 'text-white' : 'text-surface-900'}`}
-                        />
+                {/* Password / Security Card */}
+                <div className={`p-8 rounded-[32px] border transition-all duration-300 shadow-2xl flex flex-col justify-between ${
+                  isDark 
+                    ? 'bg-surface-900/40 border-violet-500/10 hover:border-violet-500/20 text-white' 
+                    : 'bg-white border-surface-200 shadow-[0_15px_30px_rgba(0,0,0,0.02)]'
+                }`}>
+                  <div>
+                    <div className="flex items-center gap-3.5 mb-8">
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-violet-500/20">
+                        <Sparkles size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold tracking-tight font-sans">Security</h3>
+                        <p className={`text-xs ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>Keep your credentials updated</p>
                       </div>
                     </div>
 
-                    <div>
-                      <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-surface-450' : 'text-surface-600'}`}>Email Address</label>
-                      <div className={`relative flex items-center rounded-xl border opacity-70 ${
-                        isDark ? 'bg-surface-950 border-surface-700' : 'bg-surface-50 border-surface-200'
-                      }`}>
-                        <User size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
-                        <input
-                          type="email"
-                          value={user?.email || ''}
-                          disabled
-                          className={`w-full bg-transparent border-none outline-none py-3.5 pl-11 pr-4 text-sm cursor-not-allowed ${isDark ? 'text-white' : 'text-surface-900'}`}
-                        />
+                    <form onSubmit={handleUpdatePassword} className="space-y-6">
+                      {/* Current Password */}
+                      <div className="space-y-2">
+                        <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Current Password</label>
+                        <div className={`relative flex items-center rounded-2xl border transition-colors ${
+                          isDark 
+                            ? 'bg-[#120f26]/40 border-violet-500/20 focus-within:border-primary-500' 
+                            : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                        }`}>
+                          <User size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                          <input
+                            type="password"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            required
+                            placeholder="••••••••"
+                            className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm ${isDark ? 'text-white placeholder-surface-700' : 'text-surface-900 placeholder-surface-300'}`}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <button
-                    type="submit"
-                    disabled={isUpdatingProfile}
-                    className="bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed border-none cursor-pointer shadow-lg shadow-primary-500/25"
-                  >
-                    {isUpdatingProfile ? <Loader2 size={18} className="animate-spin" /> : 'Save Changes'}
-                  </button>
-                </form>
+                      {/* New Password */}
+                      <div className="space-y-2">
+                        <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>New Password</label>
+                        <div className={`relative flex items-center rounded-2xl border transition-colors ${
+                          isDark 
+                            ? 'bg-[#120f26]/40 border-violet-500/20 focus-within:border-primary-500' 
+                            : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                        }`}>
+                          <User size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                          <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            required
+                            placeholder="At least 6 characters"
+                            className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm ${isDark ? 'text-white placeholder-surface-700' : 'text-surface-900 placeholder-surface-300'}`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Confirm New Password */}
+                      <div className="space-y-2">
+                        <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Confirm New Password</label>
+                        <div className={`relative flex items-center rounded-2xl border transition-colors ${
+                          isDark 
+                            ? 'bg-[#120f26]/40 border-violet-500/20 focus-within:border-primary-500' 
+                            : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                        }`}>
+                          <User size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                          <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            placeholder="Re-enter new password"
+                            className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm ${isDark ? 'text-white placeholder-surface-700' : 'text-surface-900 placeholder-surface-300'}`}
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isUpdatingPassword}
+                        className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold px-6 py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-all disabled:opacity-75 disabled:cursor-not-allowed border-none cursor-pointer shadow-lg shadow-violet-500/25"
+                      >
+                        {isUpdatingPassword ? <Loader2 size={18} className="animate-spin" /> : 'Update Account Password'}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
               </div>
 
-              <div className={`p-6 rounded-3xl border flex items-center justify-between ${
-                isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200'
+              {/* Design Credits Footer */}
+              <div className={`p-6 rounded-[24px] border flex items-center justify-between transition-all duration-300 ${
+                isDark 
+                  ? 'bg-surface-900/20 border-violet-500/5 hover:border-violet-500/10' 
+                  : 'bg-white border-surface-200 shadow-sm'
               }`}>
                 <div>
-                  <h4 className="font-bold text-sm">Design Credits</h4>
-                  <p className={`text-xs ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>Created with premium glassmorphism patterns.</p>
+                  <h4 className="font-bold text-sm">Design & Developer Credits</h4>
+                  <p className={`text-xs ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>Beautifully crafted with custom glassmorphism styles and high-performance routing.</p>
                 </div>
-                <a 
-                  href="https://rithik186.netlify.app/" 
-                  target="_blank" 
+                <a
+                  href="https://rithik186.netlify.app/"
+                  target="_blank"
                   rel="noreferrer"
-                  className="text-xs font-bold text-primary-500 hover:underline"
+                  className="text-xs font-bold text-primary-500 hover:underline no-underline"
                 >
                   By Rithik
                 </a>
@@ -1636,7 +1875,7 @@ const HomePage = () => {
         </main>
 
         {/* Sticky Desktop Dock Navigation Bar (Separate space, no overlap) */}
-        <div className="hidden md:flex justify-center items-center w-full py-5 mt-auto border-t backdrop-blur-md bg-white/80 dark:bg-[#06040b]/80 border-slate-200/60 dark:border-[#18132e]/60 z-40 sticky bottom-0">
+        <div className="hidden md:flex justify-center items-center w-full py-5 mt-auto border-t md:border-t-0 backdrop-blur-none bg-white/80 dark:bg-transparent border-slate-200/60 dark:border-transparent z-40 sticky bottom-0">
           <Dock items={dockItems} />
         </div>
       </div>
@@ -1647,21 +1886,19 @@ const HomePage = () => {
       {selectedQrUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop Blur */}
-          <div 
+          <div
             onClick={() => setSelectedQrUrl(null)}
             className="absolute inset-0 bg-surface-950/40 backdrop-blur-md animate-in fade-in duration-200"
           />
-          
+
           {/* Modal Container */}
-          <div className={`relative w-full max-w-sm p-6 md:p-8 rounded-3xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${
-            isDark ? 'bg-surface-900 border border-surface-800 text-white' : 'bg-white border border-surface-150 text-surface-950'
-          }`}>
+          <div className={`relative w-full max-w-sm p-6 md:p-8 rounded-3xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 ${isDark ? 'bg-surface-900 border border-surface-800 text-white' : 'bg-white border border-surface-150 text-surface-950'
+            }`}>
             {/* Close button */}
-            <button 
+            <button
               onClick={() => setSelectedQrUrl(null)}
-              className={`absolute top-4 right-4 p-2 rounded-full transition-all border-none cursor-pointer ${
-                isDark ? 'bg-surface-850 hover:bg-surface-800 text-surface-400 hover:text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-500 hover:text-surface-900'
-              }`}
+              className={`absolute top-4 right-4 p-2 rounded-full transition-all border-none cursor-pointer ${isDark ? 'bg-surface-850 hover:bg-surface-800 text-surface-400 hover:text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-500 hover:text-surface-900'
+                }`}
             >
               <X size={16} />
             </button>
@@ -1680,9 +1917,9 @@ const HomePage = () => {
               {/* QR Render Container - Floating paper-like card with zero internal border nesting */}
               <div className="p-5 bg-white rounded-2xl shadow-xl flex items-center justify-center border border-surface-100 dark:border-none">
                 {qrDataUrl ? (
-                  <img 
-                    src={qrDataUrl} 
-                    alt="QR Code" 
+                  <img
+                    src={qrDataUrl}
+                    alt="QR Code"
                     className="w-44 h-44 object-contain animate-in fade-in zoom-in-90 duration-200"
                   />
                 ) : (
@@ -1698,7 +1935,7 @@ const HomePage = () => {
                   Quick Share Link
                 </p>
                 <div className="grid grid-cols-2 gap-3 w-full">
-                  <button 
+                  <button
                     onClick={() => handleWhatsAppShare(`${API_BASE_URL}/${selectedQrUrl.shortCode}`)}
                     className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold border-none cursor-pointer transition-all shadow-md shadow-emerald-600/10"
                     title="Share on WhatsApp"
@@ -1707,7 +1944,7 @@ const HomePage = () => {
                     WhatsApp
                   </button>
 
-                  <button 
+                  <button
                     onClick={() => handleSystemShare(`${API_BASE_URL}/${selectedQrUrl.shortCode}`)}
                     className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold border-none cursor-pointer transition-all shadow-md shadow-blue-600/10"
                     title="Share Link"
@@ -1724,13 +1961,12 @@ const HomePage = () => {
       {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
+          <div
             onClick={() => setShowLogoutConfirm(false)}
             className="absolute inset-0 bg-surface-950/45 backdrop-blur-md animate-in fade-in duration-200"
           />
-          <div className={`relative w-full max-w-sm p-6 md:p-8 rounded-3xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 border ${
-            isDark ? 'bg-surface-900 border-surface-800 text-white' : 'bg-white border border-surface-150 text-surface-950'
-          }`}>
+          <div className={`relative w-full max-w-sm p-6 md:p-8 rounded-3xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 border ${isDark ? 'bg-surface-900 border-surface-800 text-white' : 'bg-white border border-surface-150 text-surface-950'
+            }`}>
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500">
                 <LogOut size={24} />
@@ -1742,15 +1978,14 @@ const HomePage = () => {
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3 w-full pt-2">
-                <button 
+                <button
                   onClick={() => setShowLogoutConfirm(false)}
-                  className={`py-2.5 px-4 rounded-xl text-xs font-bold border cursor-pointer transition-all ${
-                    isDark ? 'bg-surface-800 hover:bg-surface-750 border-surface-700 text-surface-400 hover:text-white' : 'bg-white hover:bg-surface-100 border-surface-200 text-surface-700'
-                  }`}
+                  className={`py-2.5 px-4 rounded-xl text-xs font-bold border cursor-pointer transition-all ${isDark ? 'bg-surface-800 hover:bg-surface-750 border-surface-700 text-surface-400 hover:text-white' : 'bg-white hover:bg-surface-100 border-surface-200 text-surface-700'
+                    }`}
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setShowLogoutConfirm(false);
                     logout();
@@ -1768,31 +2003,28 @@ const HomePage = () => {
       {/* Edit URL Modal */}
       {selectedUrlForEdit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
+          <div
             onClick={() => setSelectedUrlForEdit(null)}
             className="absolute inset-0 bg-surface-950/45 backdrop-blur-md animate-in fade-in duration-200"
           />
-          <div className={`relative w-full max-w-md p-6 md:p-8 rounded-3xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 border ${
-            isDark ? 'bg-surface-900 border-surface-800 text-white' : 'bg-white border border-surface-150 text-surface-950'
-          }`}>
+          <div className={`relative w-full max-w-md p-6 md:p-8 rounded-3xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 border ${isDark ? 'bg-surface-900 border-surface-800 text-white' : 'bg-white border border-surface-150 text-surface-950'
+            }`}>
             {/* Close button */}
-            <button 
+            <button
               onClick={() => setSelectedUrlForEdit(null)}
-              className={`absolute top-4 right-4 p-2 rounded-full transition-all border-none cursor-pointer ${
-                isDark ? 'bg-surface-850 hover:bg-surface-800 text-surface-400 hover:text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-500 hover:text-surface-900'
-              }`}
+              className={`absolute top-4 right-4 p-2 rounded-full transition-all border-none cursor-pointer ${isDark ? 'bg-surface-850 hover:bg-surface-800 text-surface-400 hover:text-white' : 'bg-surface-50 hover:bg-surface-100 text-surface-500 hover:text-surface-900'
+                }`}
             >
               <X size={16} />
             </button>
 
             <h3 className="text-xl font-bold mb-5 font-[family-name:var(--font-display)]">Edit Shortlink</h3>
-            
+
             <form onSubmit={handleSaveEdit} className="space-y-4">
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Destination URL</label>
-                <div className={`relative flex items-center rounded-xl border transition-colors ${
-                  isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
-                }`}>
+                <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
+                  }`}>
                   <LinkIcon size={16} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
                   <input
                     type="url"
@@ -1807,9 +2039,8 @@ const HomePage = () => {
 
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Custom Alias</label>
-                <div className={`relative flex items-center rounded-xl border transition-colors ${
-                  isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
-                }`}>
+                <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
+                  }`}>
                   <span className={`absolute left-4 text-xs font-semibold ${isDark ? 'text-surface-500' : 'text-surface-400'}`}>/</span>
                   <input
                     type="text"
@@ -1823,9 +2054,8 @@ const HomePage = () => {
 
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Expiration Date</label>
-                <div className={`relative flex items-center rounded-xl border transition-colors ${
-                  isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
-                }`}>
+                <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
+                  }`}>
                   <Calendar size={16} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
                   <input
                     type="datetime-local"
@@ -1838,16 +2068,15 @@ const HomePage = () => {
               </div>
 
               <div className="flex justify-end gap-3 pt-4">
-                <button 
+                <button
                   type="button"
                   onClick={() => setSelectedUrlForEdit(null)}
-                  className={`py-2.5 px-4 rounded-xl text-xs font-bold border cursor-pointer transition-all ${
-                    isDark ? 'bg-surface-800 hover:bg-surface-750 border-surface-700 text-surface-400 hover:text-white' : 'bg-white hover:bg-surface-100 border-surface-200 text-surface-700'
-                  }`}
+                  className={`py-2.5 px-4 rounded-xl text-xs font-bold border cursor-pointer transition-all ${isDark ? 'bg-surface-800 hover:bg-surface-750 border-surface-700 text-surface-400 hover:text-white' : 'bg-white hover:bg-surface-100 border-surface-200 text-surface-700'
+                    }`}
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={isSavingEdit}
                   className="py-2.5 px-5 rounded-xl bg-primary-600 hover:bg-primary-500 disabled:opacity-75 disabled:cursor-not-allowed text-white text-xs font-bold border-none cursor-pointer transition-all shadow-md shadow-primary-600/10 flex items-center gap-1.5"
@@ -1867,7 +2096,207 @@ const HomePage = () => {
         </div>
       )}
 
-    </div>
+      {/* "How to Use" Interactive GSAP Modal */}
+      {showHowToUse && (
+        <div
+          ref={stepsContainerRef}
+          className={`fixed inset-0 z-50 overflow-y-auto scroll-smooth flex justify-center backdrop-blur-xl transition-colors duration-300 ${isDark ? 'bg-surface-950/85' : 'bg-surface-50/85'
+            }`}
+        >
+          {/* Scroll Track: tall height container to enable natural scrolling inside the fixed/sticky modal */}
+          <div className="relative w-full h-[600vh] scroll-track">
+
+            {/* Sticky Container representing the fixed viewport frame */}
+            <div className="sticky top-0 w-full h-screen overflow-hidden flex flex-col justify-between p-6 md:p-10 select-none">
+
+              {/* Header */}
+              <div className="w-full max-w-5xl mx-auto flex justify-between items-center z-20 shrink-0">
+                <div className="flex items-center gap-2">
+                  <HelpCircle size={24} className="text-violet-500" />
+                  <span className={`font-extrabold text-xl tracking-tight font-sans ${isDark ? 'text-white' : 'text-surface-900'}`}>
+                    Nebula Guide <span className="text-xs uppercase font-bold text-violet-500 dark:text-violet-400 bg-violet-500/10 px-2.5 py-0.5 rounded-full ml-2">Cinematic</span>
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowHowToUse(false)}
+                  className={`p-2.5 rounded-full border cursor-pointer transition-all ${isDark
+                    ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
+                    : 'bg-black/5 border-black/10 hover:bg-black/10 text-slate-800'
+                    }`}
+                  type="button"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Cinematic Fly-through viewport */}
+              <div className="relative flex-1 w-full max-w-5xl mx-auto flex items-center justify-center z-10">
+
+                {/* Step 1 */}
+                <div
+                  className={`step-scene absolute w-full max-w-3xl p-10 md:p-14 rounded-[36px] border flex flex-col items-center text-center gap-8 shadow-2xl transition-colors duration-300 ${isDark
+                    ? 'bg-[#0f0b21] border-violet-500/20 text-white shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
+                    : 'bg-white border-violet-100 text-surface-900 shadow-[0_20px_50px_rgba(99,102,241,0.08)]'
+                    }`}
+                  style={{ willChange: 'transform, opacity' }}
+                >
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#8b00e0] to-[#a400ff] text-white flex items-center justify-center shadow-xl shadow-violet-500/25">
+                    <LinkIcon size={38} />
+                  </div>
+                  <div className="space-y-4">
+                    <span className="text-xs tracking-widest uppercase font-extrabold text-violet-500 dark:text-violet-400">Step 1 of 6</span>
+                    <h3 className="text-3xl md:text-5xl font-black tracking-tight font-sans">Destination URL</h3>
+                    <p className={`text-base md:text-lg leading-relaxed font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                      Paste your long, complex destination web address into the main URL shortener input box to begin conversion.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div
+                  className={`step-scene absolute w-full max-w-3xl p-10 md:p-14 rounded-[36px] border flex flex-col items-center text-center gap-8 shadow-2xl transition-colors duration-300 ${isDark
+                    ? 'bg-[#0f0b21] border-violet-500/20 text-white shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
+                    : 'bg-white border-violet-100 text-surface-900 shadow-[0_20px_50px_rgba(99,102,241,0.08)]'
+                    }`}
+                  style={{ willChange: 'transform, opacity' }}
+                >
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#8b00e0] to-[#a400ff] text-white flex items-center justify-center shadow-xl shadow-violet-500/25">
+                    <Pencil size={38} />
+                  </div>
+                  <div className="space-y-4">
+                    <span className="text-xs tracking-widest uppercase font-extrabold text-violet-500 dark:text-violet-400">Step 2 of 6</span>
+                    <h3 className="text-3xl md:text-5xl font-black tracking-tight font-sans">Custom Alias</h3>
+                    <p className={`text-base md:text-lg leading-relaxed font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                      Give your link a memorable name that aligns with your brand. Replacing random characters with custom slugs boosts CTR by up to 34%.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div
+                  className={`step-scene absolute w-full max-w-3xl p-10 md:p-14 rounded-[36px] border flex flex-col items-center text-center gap-8 shadow-2xl transition-colors duration-300 ${isDark
+                    ? 'bg-[#0f0b21] border-violet-500/20 text-white shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
+                    : 'bg-white border-violet-100 text-surface-900 shadow-[0_20px_50px_rgba(99,102,241,0.08)]'
+                    }`}
+                  style={{ willChange: 'transform, opacity' }}
+                >
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#8b00e0] to-[#a400ff] text-white flex items-center justify-center shadow-xl shadow-violet-500/25">
+                    <Calendar size={38} />
+                  </div>
+                  <div className="space-y-4">
+                    <span className="text-xs tracking-widest uppercase font-extrabold text-violet-500 dark:text-violet-400">Step 3 of 6</span>
+                    <h3 className="text-3xl md:text-5xl font-black tracking-tight font-sans">Expiry Schedule</h3>
+                    <p className={`text-base md:text-lg leading-relaxed font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                      Schedule precise expiration dates for temporary campaigns or marketing assets. Once expired, the link automatically deactivates.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 4 */}
+                <div
+                  className={`step-scene absolute w-full max-w-3xl p-10 md:p-14 rounded-[36px] border flex flex-col items-center text-center gap-8 shadow-2xl transition-colors duration-300 ${isDark
+                    ? 'bg-[#0f0b21] border-violet-500/20 text-white shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
+                    : 'bg-white border-violet-100 text-surface-900 shadow-[0_20px_50px_rgba(99,102,241,0.08)]'
+                    }`}
+                  style={{ willChange: 'transform, opacity' }}
+                >
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#8b00e0] to-[#a400ff] text-white flex items-center justify-center shadow-xl shadow-violet-500/25">
+                    <Sparkles size={38} />
+                  </div>
+                  <div className="space-y-4">
+                    <span className="text-xs tracking-widest uppercase font-extrabold text-violet-500 dark:text-violet-400">Step 4 of 6</span>
+                    <h3 className="text-3xl md:text-5xl font-black tracking-tight font-sans">Mint Shortlink</h3>
+                    <p className={`text-base md:text-lg leading-relaxed font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                      Hit shorten to instantly mint your new shortcode on Nebula. Our high-frequency router processes URLs in under 10ms.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 5 */}
+                <div
+                  className={`step-scene absolute w-full max-w-3xl p-10 md:p-14 rounded-[36px] border flex flex-col items-center text-center gap-8 shadow-2xl transition-colors duration-300 ${isDark
+                    ? 'bg-[#0f0b21] border-violet-500/20 text-white shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
+                    : 'bg-white border-violet-100 text-surface-900 shadow-[0_20px_50px_rgba(99,102,241,0.08)]'
+                    }`}
+                  style={{ willChange: 'transform, opacity' }}
+                >
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#8b00e0] to-[#a400ff] text-white flex items-center justify-center shadow-xl shadow-violet-500/25">
+                    <QrCode size={38} />
+                  </div>
+                  <div className="space-y-4">
+                    <span className="text-xs tracking-widest uppercase font-extrabold text-violet-500 dark:text-violet-400">Step 5 of 6</span>
+                    <h3 className="text-3xl md:text-5xl font-black tracking-tight font-sans">Share & QR Code</h3>
+                    <p className={`text-base md:text-lg leading-relaxed font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                      Share directly to WhatsApp or system channels. Instantly generate and download customizable, high-resolution vector QR codes.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 6 */}
+                <div
+                  className={`step-scene absolute w-full max-w-3xl p-10 md:p-14 rounded-[36px] border flex flex-col items-center text-center gap-8 shadow-2xl transition-colors duration-300 ${isDark
+                    ? 'bg-[#0f0b21] border-violet-500/20 text-white shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
+                    : 'bg-white border-violet-100 text-surface-900 shadow-[0_20px_50px_rgba(99,102,241,0.08)]'
+                    }`}
+                  style={{ willChange: 'transform, opacity' }}
+                >
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#8b00e0] to-[#a400ff] text-white flex items-center justify-center shadow-xl shadow-violet-500/25">
+                    <Settings size={38} />
+                  </div>
+                  <div className="space-y-4">
+                    <span className="text-xs tracking-widest uppercase font-extrabold text-violet-500 dark:text-violet-400">Step 6 of 6</span>
+                    <h3 className="text-3xl md:text-5xl font-black tracking-tight font-sans">Lifecycle Control</h3>
+                    <p className={`text-base md:text-lg leading-relaxed font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                      Track live visitors with detailed analytics, update target destinations dynamically, or delete links permanently.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Footer Progress & Scroll Guidance */}
+              <div className="w-full max-w-5xl mx-auto z-20 shrink-0 flex flex-col items-center gap-4">
+
+                {/* Horizontal Progress Track */}
+                <div className="w-full flex items-center gap-4">
+                  <span className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>0%</span>
+                  <div className={`flex-1 h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-black/10'}`}>
+                    <div
+                      className="h-full bg-gradient-to-r from-[#8b00e0] to-[#a400ff] transition-all duration-75"
+                      style={{ width: `${scrollProgress}%` }}
+                    />
+                  </div>
+                  <span className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>100%</span>
+                </div>
+
+                {/* Scroll Guidance */}
+                <div className="flex items-center gap-2.5">
+                  {scrollProgress >= 95 ? (
+                    <button
+                      onClick={() => setShowHowToUse(false)}
+                      className="px-8 py-3 rounded-2xl bg-gradient-to-r from-[#8b00e0] to-[#a400ff] text-white font-extrabold text-xs border-none cursor-pointer transition-all hover:opacity-90 shadow-lg shadow-violet-500/25 animate-bounce"
+                      type="button"
+                    >
+                      Got It, Let's Start
+                    </button>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1.5 opacity-80 animate-pulse">
+                      <span className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Scroll down to penetrate through steps</span>
+                      <div className={`w-5 h-8 border-2 rounded-full flex justify-center p-0.5 ${isDark ? 'border-white/20' : 'border-black/20'}`}>
+                        <div className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+    </motion.div>
   )
 }
 

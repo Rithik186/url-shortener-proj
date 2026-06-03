@@ -219,13 +219,13 @@ const PillNav = ({
   };
 
   return (
-    <div className="absolute top-[1.2em] z-[1000] w-full left-0 md:w-auto md:left-1/2 md:-translate-x-1/2">
+    <div className="fixed top-[1.2em] z-[1000] w-full left-0 md:w-auto md:left-1/2 md:-translate-x-1/2">
       <nav
         className={`w-full md:w-max flex items-center justify-between md:justify-start box-border px-4 md:px-0 ${className}`}
         aria-label="Primary"
         style={cssVars}
       >
-        {isRouterLink(items?.[0]?.href) ? (
+        {logo && (isRouterLink(items?.[0]?.href) ? (
           <Link
             to={items[0].href}
             aria-label="Home"
@@ -260,7 +260,7 @@ const PillNav = ({
           >
             <img src={logo} alt={logoAlt} ref={logoImgRef} className="w-full h-full object-cover block" />
           </a>
-        )}
+        ))}
 
         <div
           ref={navItemsRef}
@@ -382,7 +382,7 @@ const PillNav = ({
           onClick={toggleMobileMenu}
           aria-label="Toggle menu"
           aria-expanded={isMobileMenuOpen}
-          className="md:hidden rounded-full border-0 flex flex-col items-center justify-center gap-1 cursor-pointer p-0 relative shadow-md"
+          className="md:hidden rounded-full border border-solid border-surface-200 dark:border-surface-800 flex flex-col items-center justify-center gap-1 cursor-pointer p-0 relative shadow-md"
           style={{
             width: 'var(--nav-h)',
             height: 'var(--nav-h)',
@@ -391,11 +391,11 @@ const PillNav = ({
         >
           <span
             className="hamburger-line w-4 h-0.5 rounded origin-center transition-all duration-[10ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
-            style={{ background: 'var(--pill-bg, #fff)' }}
+            style={{ background: 'var(--pill-text, #fff)' }}
           />
           <span
             className="hamburger-line w-4 h-0.5 rounded origin-center transition-all duration-[10ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
-            style={{ background: 'var(--pill-bg, #fff)' }}
+            style={{ background: 'var(--pill-text, #fff)' }}
           />
         </button>
       </nav>

@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(true)
     localStorage.setItem('nebula-user', JSON.stringify(userData))
     if (token) localStorage.setItem('nebula-token', token)
-    toast.success('Login successful! Welcome back.')
+    toast.success('Login successful! Welcome back.', { duration: 1500 })
     navigate('/home')
   }
 
