@@ -382,7 +382,7 @@ const PillNav = ({
           onClick={toggleMobileMenu}
           aria-label="Toggle menu"
           aria-expanded={isMobileMenuOpen}
-          className="md:hidden rounded-full border border-solid border-surface-200 dark:border-surface-800 flex flex-col items-center justify-center gap-1 cursor-pointer p-0 relative shadow-md"
+          className="md:hidden ml-auto rounded-full border border-solid border-surface-200 dark:border-surface-800 flex flex-col items-center justify-center gap-1 cursor-pointer p-0 relative shadow-md"
           style={{
             width: 'var(--nav-h)',
             height: 'var(--nav-h)',

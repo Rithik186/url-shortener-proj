@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useTheme } from '../context/ThemeContext'
 import PillNav from '../Components/PillNav'
@@ -69,6 +70,20 @@ const LandingPage = () => {
       className={`min-h-screen relative overflow-x-hidden ${isDark ? 'bg-transparent text-white' : 'bg-surface-50 text-surface-900'}`}
     >
       
+      {/* Brand Logo */}
+      <div className="fixed top-[1.2em] left-4 md:left-8 z-[1001]">
+        <Link to="/" className="flex items-center gap-2.5 no-underline group">
+          <img 
+            src={logo} 
+            alt="Nebula Logo" 
+            className="w-9 h-9 md:w-10 md:h-10 object-contain group-hover:scale-105 transition-transform duration-300" 
+          />
+          <span className={`text-xl md:text-2xl font-bold font-[family-name:var(--font-display)] tracking-tight ${isDark ? 'text-white' : 'text-surface-900'}`}>
+            Nebu<span className="gradient-text">la</span>
+          </span>
+        </Link>
+      </div>
+
       {/* Floating Header Actions / Theme Toggle */}
       <div className="fixed top-[1.2em] right-[4.5rem] md:right-6 z-[1001] flex items-center gap-3">
         <button

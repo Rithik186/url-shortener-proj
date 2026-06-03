@@ -80,7 +80,7 @@ const Footer = () => {
           isDark ? 'border-surface-800/50' : 'border-surface-200'
         }`}>
           <p className={`text-xs ${isDark ? 'text-surface-600' : 'text-surface-400'}`}>&copy; {new Date().getFullYear()} Nebula. All rights reserved.</p>
-          <p className={`text-xs ${isDark ? 'text-surface-700' : 'text-surface-300'}`}>Built with ❤️ for developers</p>
+          <p className={`text-xs ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Built with ❤️ for developers</p>
         </div>
       </div>
     </footer>
