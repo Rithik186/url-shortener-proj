@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useTheme } from '../context/ThemeContext'
 import PillNav from '../Components/PillNav'
@@ -15,6 +15,19 @@ import { API_BASE_URL } from '../config'
 
 const LandingPage = () => {
   const { isDark, toggleTheme } = useTheme()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('nebula-user')
+    if (storedUser) {
+      const sessionActive = sessionStorage.getItem('nebula-session-active')
+      if (sessionActive === 'true') {
+        navigate('/home')
+      } else {
+        navigate('/login')
+      }
+    }
+  }, [navigate])
   
   // Contact Form States
   const [showContactModal, setShowContactModal] = useState(false)

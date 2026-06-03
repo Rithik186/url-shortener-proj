@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Mail, Lock, User, ArrowRight, Loader2, ArrowLeft 
+  Mail, Lock, User, ArrowRight, Loader2, ArrowLeft, Sun, Moon 
 } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
 import toast from 'react-hot-toast';
@@ -11,12 +11,13 @@ import { API_BASE_URL } from '../config';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const AuthPage = () => {
-  const { isDark } = useTheme();
-  const { login } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
+  const { login, confirmSession } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
   const [isLogin, setIsLogin] = useState(true);
+  const [rememberedUser, setRememberedUser] = useState(null);
   const [formData, setFormData] = useState({ 
     name: '', 
     email: '', 
@@ -24,6 +25,17 @@ const AuthPage = () => {
     confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('nebula-user');
+    if (stored) {
+      try {
+        setRememberedUser(JSON.parse(stored));
+      } catch (e) {
+        console.error('Error parsing stored user:', e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (location.pathname === '/signup') {
@@ -112,6 +124,19 @@ const AuthPage = () => {
         aria-label="Back to home"
       >
         <ArrowLeft size={18} className="transition-transform duration-300 hover:-translate-x-0.5" />
+      </button>
+
+      {/* Fixed Theme Toggle Button (Top-Right of screen) */}
+      <button
+        onClick={toggleTheme}
+        className={`fixed top-6 right-6 md:top-8 md:right-8 p-3 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer border shadow-md z-[100] hover:scale-110 active:scale-95 ${
+          isDark 
+            ? 'bg-[#151124]/90 border-[#2d254b]/60 text-yellow-400 hover:text-yellow-300 hover:bg-[#1e1738]/90 hover:shadow-yellow-500/20 hover:border-yellow-500/40 shadow-black/40' 
+            : 'bg-white/90 border-indigo-150 text-indigo-600 hover:text-indigo-900 hover:bg-[#f3f1fa]/90 hover:shadow-indigo-500/10 hover:border-indigo-300 shadow-indigo-100/50'
+        }`}
+        aria-label="Toggle theme"
+      >
+        {isDark ? <Sun size={18} /> : <Moon size={18} />}
       </button>
       
       {/* Dynamic Keyframe Animations Style Tag */}
@@ -377,189 +402,260 @@ const AuthPage = () => {
           }`}
         >
           
-          {/* Main Title heading matching the image */}
-          <motion.div layout className="mb-8">
-            <h1 className={`text-4xl md:text-5xl font-black mb-3 tracking-tight font-[family-name:var(--font-display)] uppercase ${
-              isDark ? 'text-white' : 'text-[#1e1b4b]'
-            }`}>
-              {isLogin ? 'Sign In' : 'Sign Up'}
-            </h1>
-            <p className={`text-xs font-bold tracking-wide uppercase opacity-75 ${
-              isDark ? 'text-slate-400' : 'text-[#4f46e5]'
-            }`}>
-              {isLogin ? 'Sign in with email address' : 'Create an account to begin'}
-            </p>
-          </motion.div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            
-            {/* Full Name (Sign Up Only) */}
-            <AnimatePresence initial={false}>
-              {!isLogin && (
-                <motion.div
-                  key="name-field"
-                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                  animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
-                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                  transition={{ duration: 0.2, ease: 'easeInOut' }}
-                  className="overflow-hidden"
-                >
-                  <div className="space-y-1">
-                    <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
-                      isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
-                    }`}>
-                      <User size={18} className={`absolute left-4 ${isDark ? 'text-slate-500' : 'text-indigo-400'}`} />
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required={!isLogin}
-                        className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm font-semibold ${
-                          isDark ? 'text-white placeholder-slate-600' : 'text-slate-800 placeholder-[#a5b4fc]'
-                        }`}
-                        placeholder="Full Name"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Email Address */}
-            <motion.div layout className="space-y-1">
-              <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
-                isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
-              }`}>
-                <Mail size={18} className={`absolute left-4 ${isDark ? 'text-slate-500' : 'text-indigo-400'}`} />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm font-semibold ${
-                    isDark ? 'text-white placeholder-slate-600' : 'text-slate-800 placeholder-[#a5b4fc]'
-                  }`}
-                  placeholder="Yourname@gmail.com"
-                />
-              </div>
-            </motion.div>
-
-            {/* Password */}
-            <motion.div layout className="space-y-1">
-              <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
-                isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
-              }`}>
-                <Lock size={18} className={`absolute left-4 ${isDark ? 'text-slate-500' : 'text-indigo-400'}`} />
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm font-semibold ${
-                    isDark ? 'text-white placeholder-slate-600' : 'text-slate-800 placeholder-[#a5b4fc]'
-                  }`}
-                  placeholder="Password"
-                />
-              </div>
-            </motion.div>
-
-            {/* Confirm Password (Sign Up Only) */}
-            <AnimatePresence initial={false}>
-              {!isLogin && (
-                <motion.div
-                  key="confirm-password-field"
-                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                  animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
-                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                  transition={{ duration: 0.2, ease: 'easeInOut' }}
-                  className="overflow-hidden"
-                >
-                  <div className="space-y-1">
-                    <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
-                      isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
-                    }`}>
-                      <Lock size={18} className={`absolute left-4 ${isDark ? 'text-slate-500' : 'text-indigo-400'}`} />
-                      <input
-                        type="password"
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        required={!isLogin}
-                        className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm font-semibold ${
-                          isDark ? 'text-white placeholder-slate-600' : 'text-slate-800 placeholder-[#a5b4fc]'
-                        }`}
-                        placeholder="Confirm Password"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Big Gradient Action Button matching image */}
-            <motion.button
-              layout
-              type="submit"
-              disabled={isLoading}
-              className="w-full mt-2 bg-gradient-to-r from-[#5b21b6] via-[#3b82f6] to-[#1d4ed8] text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#5b21b6]/25 hover:opacity-90 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed border-none cursor-pointer text-sm"
+          {rememberedUser && isLogin ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="text-center py-4 flex flex-col items-center"
             >
-              {isLoading ? <Loader2 size={18} className="animate-spin" /> : (
-                <span className="flex items-center gap-2">
-                  {isLogin ? 'Sign in' : 'Sign up'}
+              {/* Avatar circle */}
+              <div className="relative mb-6">
+                <div className={`w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black shadow-lg relative ${
+                  isDark 
+                    ? 'bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-violet-900/50' 
+                    : 'bg-gradient-to-br from-violet-100 to-indigo-100 text-indigo-700 shadow-indigo-200/50'
+                }`}>
+                  {rememberedUser.avatar ? (
+                    <img 
+                      src={rememberedUser.avatar} 
+                      alt={rememberedUser.name} 
+                      className="w-full h-full rounded-full object-cover" 
+                    />
+                  ) : (
+                    rememberedUser.name ? rememberedUser.name.charAt(0).toUpperCase() : 'U'
+                  )}
+                  {/* Glowing halo indicator */}
+                  <div className="absolute -inset-1.5 rounded-full border-2 border-primary-500/30 animate-pulse" />
+                </div>
+              </div>
+
+              <h2 className={`text-2xl font-black mb-2 uppercase font-[family-name:var(--font-display)] ${
+                isDark ? 'text-white' : 'text-[#1e1b4b]'
+              }`}>
+                Welcome Back!
+              </h2>
+              <p className={`text-sm font-semibold mb-8 opacity-75 ${
+                isDark ? 'text-slate-400' : 'text-slate-600'
+              }`}>
+                Continue with <span className="font-bold text-primary-500">{rememberedUser.name}</span>?
+              </p>
+
+              <div className="w-full space-y-3">
+                <button
+                  type="button"
+                  onClick={() => confirmSession(rememberedUser)}
+                  className="w-full bg-gradient-to-r from-[#5b21b6] via-[#3b82f6] to-[#1d4ed8] text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#5b21b6]/25 hover:opacity-95 active:scale-[0.98] transition-all duration-200 border-none cursor-pointer text-sm"
+                >
+                  Yes, Continue
                   <ArrowRight size={16} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem('nebula-user');
+                    localStorage.removeItem('nebula-token');
+                    sessionStorage.removeItem('nebula-session-active');
+                    setRememberedUser(null);
+                  }}
+                  className={`w-full py-3.5 rounded-2xl border font-bold text-sm transition-all duration-200 cursor-pointer active:scale-[0.98] ${
+                    isDark 
+                      ? 'bg-transparent border-[#2d254b] text-slate-400 hover:text-white hover:border-slate-500' 
+                      : 'bg-transparent border-[#e0e7ff] text-slate-500 hover:text-slate-800 hover:border-slate-400'
+                  }`}
+                >
+                  No, switch account
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            <>
+              {/* Main Title heading matching the image */}
+              <motion.div layout className="mb-8">
+                <h1 className={`text-4xl md:text-5xl font-black mb-3 tracking-tight font-[family-name:var(--font-display)] uppercase ${
+                  isDark ? 'text-white' : 'text-[#1e1b4b]'
+                }`}>
+                  {isLogin ? 'Sign In' : 'Sign Up'}
+                </h1>
+                <p className={`text-xs font-bold tracking-wide uppercase opacity-75 ${
+                  isDark ? 'text-slate-400' : 'text-[#4f46e5]'
+                }`}>
+                  {isLogin ? 'Sign in with email address' : 'Create an account to begin'}
+                </p>
+              </motion.div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                
+                {/* Full Name (Sign Up Only) */}
+                <AnimatePresence initial={false}>
+                  {!isLogin && (
+                    <motion.div
+                      key="name-field"
+                      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                      animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
+                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-1">
+                        <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
+                          isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
+                        }`}>
+                          <User size={18} className={`absolute left-4 ${isDark ? 'text-slate-500' : 'text-indigo-400'}`} />
+                          <input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            required={!isLogin}
+                            className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm font-semibold ${
+                              isDark ? 'text-white placeholder-slate-600' : 'text-slate-800 placeholder-[#a5b4fc]'
+                            }`}
+                            placeholder="Full Name"
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Email Address */}
+                <motion.div layout className="space-y-1">
+                  <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
+                    isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
+                  }`}>
+                    <Mail size={18} className={`absolute left-4 ${isDark ? 'text-slate-500' : 'text-indigo-400'}`} />
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm font-semibold ${
+                        isDark ? 'text-white placeholder-slate-600' : 'text-slate-800 placeholder-[#a5b4fc]'
+                      }`}
+                      placeholder="Yourname@gmail.com"
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Password */}
+                <motion.div layout className="space-y-1">
+                  <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
+                    isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
+                  }`}>
+                    <Lock size={18} className={`absolute left-4 ${isDark ? 'text-slate-500' : 'text-indigo-400'}`} />
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                      className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm font-semibold ${
+                        isDark ? 'text-white placeholder-slate-600' : 'text-slate-800 placeholder-[#a5b4fc]'
+                      }`}
+                      placeholder="Password"
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Confirm Password (Sign Up Only) */}
+                <AnimatePresence initial={false}>
+                  {!isLogin && (
+                    <motion.div
+                      key="confirm-password-field"
+                      initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                      animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                      exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-1">
+                        <div className={`relative flex items-center rounded-2xl border transition-all duration-300 focus-within:ring-2 focus-within:ring-[#7c3aed]/10 focus-within:border-[#7c3aed] ${
+                          isDark ? 'bg-[#151124]/80 border-[#2d254b]' : 'bg-white border-[#e0e7ff]'
+                        }`}>
+                          <Lock size={18} className={`absolute left-4 ${isDark ? 'text-slate-500' : 'text-indigo-400'}`} />
+                          <input
+                            type="password"
+                            name="confirmPassword"
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            required={!isLogin}
+                            className={`w-full bg-transparent border-none outline-none py-3.5 pl-12 pr-4 text-sm font-semibold ${
+                              isDark ? 'text-white placeholder-slate-600' : 'text-slate-800 placeholder-[#a5b4fc]'
+                            }`}
+                            placeholder="Confirm Password"
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Big Gradient Action Button matching image */}
+                <motion.button
+                  layout
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full mt-2 bg-gradient-to-r from-[#5b21b6] via-[#3b82f6] to-[#1d4ed8] text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-[#5b21b6]/25 hover:opacity-90 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed border-none cursor-pointer text-sm"
+                >
+                  {isLoading ? <Loader2 size={18} className="animate-spin" /> : (
+                    <span className="flex items-center gap-2">
+                      {isLogin ? 'Sign in' : 'Sign up'}
+                      <ArrowRight size={16} />
+                    </span>
+                  )}
+                </motion.button>
+              </form>
+
+              {/* Divider */}
+              <motion.div layout className={`h-px my-6 w-full ${isDark ? 'bg-[#1f1a3a]' : 'bg-[#e0e7ff]'}`} />
+
+              {/* Third-party Logins */}
+              <motion.div layout className="space-y-5">
+                <p className={`text-xs font-bold text-center opacity-70 ${isDark ? 'text-slate-400' : 'text-[#4f46e5]'}`}>
+                  Or continue with
+                </p>
+                
+                {/* Google Button */}
+                <button
+                  onClick={() => handleGoogleAuth()}
+                  type="button"
+                  className={`w-full flex items-center justify-center gap-2.5 py-3 rounded-2xl border transition-all duration-200 cursor-pointer font-bold text-xs ${
+                    isDark 
+                      ? 'bg-[#151124] border-[#2d254b] text-white hover:bg-[#1a1530]' 
+                      : 'bg-white border-[#e0e7ff] text-[#312e81] hover:bg-[#f5f7ff] shadow-sm shadow-[#818cf8]/5'
+                  }`}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                    <path d="M1 1h22v22H1z" fill="none" />
+                  </svg>
+                  Google
+                </button>
+              </motion.div>
+
+              {/* Footer switcher link */}
+              <motion.div layout className="mt-8 text-center text-sm md:text-base">
+                <span className="font-semibold opacity-70">
+                  {isLogin ? "Don't have an account? " : "Already have an account? "}
                 </span>
-              )}
-            </motion.button>
-          </form>
-
-          {/* Divider */}
-          <motion.div layout className={`h-px my-6 w-full ${isDark ? 'bg-[#1f1a3a]' : 'bg-[#e0e7ff]'}`} />
-
-          {/* Third-party Logins */}
-          <motion.div layout className="space-y-5">
-            <p className={`text-xs font-bold text-center opacity-70 ${isDark ? 'text-slate-400' : 'text-[#4f46e5]'}`}>
-              Or continue with
-            </p>
-            
-            {/* Google Button */}
-            <button
-              onClick={() => handleGoogleAuth()}
-              type="button"
-              className={`w-full flex items-center justify-center gap-2.5 py-3 rounded-2xl border transition-all duration-200 cursor-pointer font-bold text-xs ${
-                isDark 
-                  ? 'bg-[#151124] border-[#2d254b] text-white hover:bg-[#1a1530]' 
-                  : 'bg-white border-[#e0e7ff] text-[#312e81] hover:bg-[#f5f7ff] shadow-sm shadow-[#818cf8]/5'
-              }`}
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                <path d="M1 1h22v22H1z" fill="none" />
-              </svg>
-              Google
-            </button>
-          </motion.div>
-
-          {/* Footer switcher link */}
-          <motion.div layout className="mt-8 text-center text-sm md:text-base">
-            <span className="font-semibold opacity-70">
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
-            </span>
-            <button 
-              onClick={() => {
-                setIsLogin(!isLogin);
-                navigate(isLogin ? '/signup' : '/login', { replace: true });
-              }} 
-              className="font-bold text-[#7c3aed] hover:text-primary-400 bg-transparent border-none cursor-pointer p-0 ml-1 text-sm md:text-base"
-            >
-              {isLogin ? 'Sign up for free' : 'Log in here'}
-            </button>
-          </motion.div>
+                <button 
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    navigate(isLogin ? '/signup' : '/login', { replace: true });
+                  }} 
+                  className="font-bold text-[#7c3aed] hover:text-primary-400 bg-transparent border-none cursor-pointer p-0 ml-1 text-sm md:text-base"
+                >
+                  {isLogin ? 'Sign up for free' : 'Log in here'}
+                </button>
+              </motion.div>
+            </>
+          )}
 
         </motion.div>
       </div>

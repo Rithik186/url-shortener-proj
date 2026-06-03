@@ -44,7 +44,7 @@ export default function Dock({ items, className = '' }) {
               onClick={item.onClick}
               className={`w-12 h-12 rounded-full flex flex-col items-center justify-center relative cursor-pointer transition-all duration-250 ease-out border shadow-sm hover:shadow-md hover:scale-108 active:scale-95 ${
                 item.isActive
-                  ? 'bg-gradient-to-br from-violet-500/15 to-violet-600/10 border-violet-500/30 text-violet-600 dark:border-violet-500/50 dark:text-violet-300 shadow-[0_0_12px_rgba(139,0,224,0.2)]'
+                  ? 'bg-gradient-to-br from-violet-500/15 to-violet-600/10 border-primary-500/30 text-violet-600 dark:border-primary-500/50 dark:text-primary-300 shadow-[0_0_12px_rgba(139,0,224,0.2)]'
                   : 'bg-white/20 dark:bg-[#120f26]/40 border-white/20 dark:border-[#261f44]/60 text-slate-650 dark:text-purple-300 hover:text-violet-600 dark:hover:text-purple-100 hover:bg-white/40 dark:hover:bg-[#1c1735]'
               } ${item.className || ''}`}
               aria-haspopup="true"
@@ -55,7 +55,7 @@ export default function Dock({ items, className = '' }) {
 
               {/* Glowing active indicator dot */}
               {item.isActive && (
-                <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-violet-500 shadow-md shadow-violet-500/50 z-20" />
+                <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-primary-500 shadow-md shadow-violet-500/50 z-20" />
               )}
             </button>
           </div>

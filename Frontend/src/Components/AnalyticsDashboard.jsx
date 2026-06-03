@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
   Link2, Copy, Check, ExternalLink, Laptop, Clock, ArrowLeft, 
-  ChevronRight, Calendar, Compass, ShieldAlert, ChevronDown
+  ChevronRight, Calendar, Compass, ShieldAlert, ChevronDown,
+  Activity
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
@@ -91,31 +92,31 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
   const activeSegment = segments.find(s => s.key === activeKey) || segments[0];
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="space-y-6 w-full flex flex-col justify-between h-full">
       {/* Header with Title and Select Dropdown */}
-      <div className="flex items-center justify-between border-b border-surface-200 dark:border-surface-850/40 pb-2">
-        <div className="space-y-0.5">
-          <h4 className="text-sm font-bold">{title}</h4>
-          <p className="text-[10px] opacity-50">All-time traffic logs</p>
+      <div className="flex items-center justify-between border-b border-surface-200 dark:border-surface-850/40 pb-3">
+        <div className="space-y-1">
+          <h4 className="text-base font-bold">{title}</h4>
+          <p className="text-xs opacity-50">All-time traffic logs</p>
         </div>
         
         {/* Custom Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11.5px] font-bold outline-none cursor-pointer transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-bold outline-none cursor-pointer transition-all ${
               isDark 
-                ? 'bg-surface-800 border-surface-750/70 text-white hover:bg-surface-700' 
+                ? 'bg-surface-850 border-surface-750/70 text-white hover:bg-surface-800' 
                 : 'bg-surface-100 border-surface-200 text-surface-800 hover:bg-surface-150'
             }`}
           >
             <span>{activeSegment ? activeSegment.label : 'Select Device'}</span>
-            <ChevronDown size={11} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={12} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
           </button>
           
           {isOpen && (
             <div 
-              className={`absolute right-0 mt-1.5 w-32 rounded-2xl border shadow-xl z-20 overflow-hidden py-1 transition-all duration-200 ${
+              className={`absolute right-0 mt-2 w-36 rounded-2xl border shadow-xl z-20 overflow-hidden py-1.5 transition-all duration-200 ${
                 isDark 
                   ? 'bg-surface-900/95 backdrop-blur-md border-surface-800 text-white shadow-black/40' 
                   : 'bg-white/95 backdrop-blur-md border-surface-150 text-surface-800 shadow-surface-300/30'
@@ -130,7 +131,7 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
                       setActiveKey(item.label.toLowerCase());
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between text-left px-3 py-2 text-xs transition-colors cursor-pointer border-none ${
+                    className={`w-full flex items-center justify-between text-left px-3.5 py-2 text-xs transition-colors cursor-pointer border-none ${
                       isSelected
                         ? isDark 
                           ? 'bg-primary-500/10 text-primary-400 font-bold' 
@@ -151,32 +152,32 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
       </div>
 
       {/* Pie Chart Canvas */}
-      <div className="flex flex-col min-[400px]:flex-row items-center justify-center gap-6 py-2 w-full">
-        <div className="relative w-28 h-28 min-[400px]:w-32 min-[400px]:h-32 flex-shrink-0">
-          <svg className="w-full h-full" viewBox="0 0 100 100">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-8 py-4 w-full flex-1">
+        <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex-shrink-0">
+          <svg className="w-full h-full filter drop-shadow-[0_8px_24px_rgba(139,0,224,0.15)]" viewBox="0 0 100 100">
             {segments.map((seg, idx) => {
               if (seg.value === 0) return null;
               const isActive = seg.key === activeKey;
               
               // Normal radii vs Active radii
               const innerR = 26;
-              const outerR = isActive ? 34 : 30;
+              const outerR = isActive ? 35 : 30;
               
               const pathD = getAnnularSectorPath(50, 50, innerR, outerR, seg.startAngle, seg.endAngle);
               
               return (
                 <g 
                   key={idx} 
-                  className="cursor-pointer"
+                  className="cursor-pointer animate-in fade-in duration-300"
                   onClick={() => setActiveKey(seg.key)}
                   onMouseEnter={() => setActiveKey(seg.key)}
                 >
                   {/* Outer active highlight ring (Sector shape) */}
                   {isActive && (
                     <path
-                      d={getAnnularSectorPath(50, 50, 36, 40, seg.startAngle, seg.endAngle)}
+                      d={getAnnularSectorPath(50, 50, 37, 41, seg.startAngle, seg.endAngle)}
                       fill={seg.color}
-                      opacity="0.3"
+                      opacity="0.25"
                       className="transition-all duration-300 animate-pulse"
                     />
                   )}
@@ -184,7 +185,7 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
                   <path
                     d={pathD}
                     fill={seg.color}
-                    className="transition-all duration-300 hover:opacity-90"
+                    className="transition-all duration-350 hover:opacity-95"
                   />
                 </g>
               );
@@ -193,17 +194,17 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
           
           {/* Centered label */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-xl font-bold font-sans">
+            <span className="text-2xl font-black font-sans tracking-tight">
               {activeSegment ? activeSegment.value.toLocaleString() : '0'}
             </span>
-            <span className="text-[9px] uppercase tracking-widest opacity-60">
+            <span className="text-[10px] uppercase tracking-widest opacity-60 font-bold">
               {activeSegment ? activeSegment.label : 'Visits'}
             </span>
           </div>
         </div>
 
         {/* Legend */}
-        <div className="flex flex-col gap-2.5 w-full min-[400px]:w-auto flex-1">
+        <div className="flex flex-col gap-3 w-full sm:w-auto flex-1 justify-center">
           {segments.map((item, idx) => {
             const percentage = total > 0 ? ((item.value / total) * 100).toFixed(0) : '0';
             const isActive = item.key === activeKey;
@@ -211,16 +212,16 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
             return (
               <div 
                 key={idx} 
-                className={`flex items-center justify-between gap-3 text-[11px] px-2.5 py-1.5 rounded-xl cursor-pointer transition-all w-full ${
+                className={`flex items-center justify-between gap-4 text-xs px-3.5 py-2.5 rounded-2xl cursor-pointer transition-all w-full ${
                   isActive 
-                    ? isDark ? 'bg-surface-800 text-white font-bold' : 'bg-surface-150 text-surface-900 font-bold'
+                    ? isDark ? 'bg-surface-850 text-white font-bold shadow-md shadow-violet-500/5' : 'bg-surface-150 text-surface-900 font-bold shadow-sm'
                     : 'opacity-70 hover:opacity-100'
                 }`}
                 onClick={() => setActiveKey(item.key)}
               >
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-                  <span className="capitalize truncate max-w-[80px]">{item.label}</span>
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-inner" style={{ backgroundColor: item.color }} />
+                  <span className="capitalize truncate max-w-[90px]">{item.label}</span>
                 </div>
                 <span className="font-bold opacity-90">{item.value} ({percentage}%)</span>
               </div>
@@ -240,14 +241,14 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
 // ----------------------------------------------------
 const BarChart = ({ data, isDark }) => {
   const maxVal = Math.max(...data.map(d => d.value), 1);
-  const height = 180;
+  const height = 240;
   const width = 500;
   const paddingX = 40;
-  const paddingY = 25;
+  const paddingY = 30;
   
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-40">
+      <div className="flex items-center justify-center h-56">
         <span className="text-xs opacity-50">No click history logged</span>
       </div>
     );
@@ -257,14 +258,21 @@ const BarChart = ({ data, isDark }) => {
   const chartHeight = height - paddingY * 2;
   
   const barCount = data.length;
-  const barGap = 16;
+  const barGap = 18;
   const totalGapsWidth = barGap * (barCount - 1);
   const barWidth = (chartWidth - totalGapsWidth) / barCount;
 
   return (
-    <div className="w-full">
-      <div className="relative h-44 w-full">
+    <div className="w-full space-y-4">
+      <div className="relative h-64 w-full">
         <svg className="w-full h-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="1" />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.85" />
+            </linearGradient>
+          </defs>
+
           {/* Grid lines */}
           {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
             <line
@@ -292,20 +300,20 @@ const BarChart = ({ data, isDark }) => {
                   x={x}
                   y={y}
                   width={barWidth}
-                  height={Math.max(barHeight, 4)}
-                  fill="#8b00e0"
-                  rx="4"
-                  ry="4"
-                  className="transition-all duration-300 group-hover:opacity-85"
+                  height={Math.max(barHeight, 5)}
+                  fill="url(#barGradient)"
+                  rx="6"
+                  ry="6"
+                  className="transition-all duration-300 group-hover:opacity-90"
                 />
 
                 {/* Always-visible Clean Count Label */}
                 <text
                   x={x + barWidth / 2}
-                  y={y - 6}
+                  y={y - 8}
                   textAnchor="middle"
-                  fill={isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.65)'}
-                  className="text-[9px] font-bold font-[family-name:var(--font-sans)]"
+                  fill={isDark ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.75)'}
+                  className="text-[10px] font-extrabold font-[family-name:var(--font-sans)]"
                 >
                   {d.value}
                 </text>
@@ -315,13 +323,15 @@ const BarChart = ({ data, isDark }) => {
         </svg>
       </div>
 
-      {/* Date labels */}
-      <div className="flex justify-between px-3 mt-2 text-[9px] opacity-60 font-semibold tracking-wider uppercase">
+      <div className="flex justify-between px-3 mt-3 text-[10px] opacity-75 font-bold tracking-wider uppercase">
         {data.map((d, i) => {
-          const shortLabel = d.label.includes(',') ? d.label.split(',')[0] : d.label;
+          const parts = d.label.split(',')
           return (
-            <span key={i} className="text-center w-12">{shortLabel}</span>
-          );
+            <span key={i} className="flex flex-col items-center text-center w-14">
+              <span>{parts[0]}</span>
+              {parts[1] && <span className="text-[9px] opacity-60 font-semibold mt-0.5">{parts[1]}</span>}
+            </span>
+          )
         })}
       </div>
     </div>
@@ -342,13 +352,23 @@ const AnalyticsDashboard = ({
   copiedId = null 
 }) => {
   const [activeDateRange] = useState('Last 7 Days');
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [selectedTimeRange, setSelectedTimeRange] = useState('7days');
+  const [globalTimeRange, setGlobalTimeRange] = useState('7days');
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // --------------------------------------------------
   // Computations
   // --------------------------------------------------
   const totalCreated = urls.length;
-  const activeLinksCount = urls.filter(url => !url.expiresAt || new Date(url.expiresAt) >= new Date()).length;
-  const expiredLinksCount = urls.filter(url => url.expiresAt && new Date(url.expiresAt) < new Date()).length;
+  const activeLinksCount = urls.filter(url => !url.expiresAt || new Date(url.expiresAt) >= currentTime).length;
+  const expiredLinksCount = urls.filter(url => url.expiresAt && new Date(url.expiresAt) < currentTime).length;
   const totalClicks = urls.reduce((acc, curr) => acc + curr.clicks, 0);
 
   // Generate last 7 days dates
@@ -369,15 +389,71 @@ const AnalyticsDashboard = ({
     globalDevices[v.device || 'Desktop'] = (globalDevices[v.device || 'Desktop'] || 0) + 1;
   });
 
-  const globalClicksByDay = last7Days.map(day => {
+  // Group global visits by date (last 7 days)
+  const globalClicks7Days = last7Days.map(day => {
     const count = allVisits.filter(v => {
       const vDate = new Date(v.timestamp).toISOString().split('T')[0];
       return vDate === day;
     }).length;
-    const dObj = new Date(day);
-    const label = dObj.toLocaleDateString(undefined, { weekday: 'short', month: 'numeric', day: 'numeric' });
-    return { label, value: count };
+    const dateObj = new Date(day);
+    const dayName = dateObj.toLocaleDateString(undefined, { weekday: 'short' });
+    const dayNum = dateObj.getDate().toString().padStart(2, '0');
+    const monthNum = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    return {
+      label: `${dayName},${dayNum}/${monthNum}`,
+      value: count
+    };
   });
+
+  // Group global visits by month (last 6 months)
+  const last6Months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    last6Months.push({
+      year: d.getFullYear(),
+      month: d.getMonth(),
+      label: d.toLocaleDateString(undefined, { month: 'short' }),
+      yearLabel: d.getFullYear().toString().slice(-2)
+    });
+  }
+
+  const globalClicksMonthly = last6Months.map(m => {
+    const count = allVisits.filter(v => {
+      const vDate = new Date(v.timestamp);
+      return vDate.getFullYear() === m.year && vDate.getMonth() === m.month;
+    }).length;
+    return {
+      label: `${m.label},'${m.yearLabel}`,
+      value: count
+    };
+  });
+
+  // Group global visits by year (last 4 years)
+  const currentYear = new Date().getFullYear();
+  const last4Years = [];
+  for (let i = 3; i >= 0; i--) {
+    last4Years.push(currentYear - i);
+  }
+
+  const globalClicksYearly = last4Years.map(year => {
+    const count = allVisits.filter(v => {
+      return new Date(v.timestamp).getFullYear() === year;
+    }).length;
+    return {
+      label: `${year}`,
+      value: count
+    };
+  });
+
+  let activeGlobalClicks = [];
+  if (globalTimeRange === '7days') {
+    activeGlobalClicks = globalClicks7Days;
+  } else if (globalTimeRange === 'monthly') {
+    activeGlobalClicks = globalClicksMonthly;
+  } else {
+    activeGlobalClicks = globalClicksYearly;
+  }
 
   const topPerformanceUrls = [...urls].sort((a, b) => b.clicks - a.clicks);
 
@@ -402,23 +478,58 @@ const AnalyticsDashboard = ({
           uDevices[v.device || 'Desktop'] = (uDevices[v.device || 'Desktop'] || 0) + 1;
         });
 
-        const uClicksByDay = last7Days.map(day => {
+        const uClicks7Days = last7Days.map(day => {
           const count = uVisits.filter(v => {
             const vDate = new Date(v.timestamp).toISOString().split('T')[0];
             return vDate === day;
           }).length;
-          const dObj = new Date(day);
-          const label = dObj.toLocaleDateString(undefined, { weekday: 'short', month: 'numeric', day: 'numeric' });
-          return { label, value: count };
+          const dateObj = new Date(day);
+          const dayName = dateObj.toLocaleDateString(undefined, { weekday: 'short' });
+          const dayNum = dateObj.getDate().toString().padStart(2, '0');
+          const monthNum = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+          return {
+            label: `${dayName},${dayNum}/${monthNum}`,
+            value: count
+          };
         });
 
+        const uClicksMonthly = last6Months.map(m => {
+          const count = uVisits.filter(v => {
+            const vDate = new Date(v.timestamp);
+            return vDate.getFullYear() === m.year && vDate.getMonth() === m.month;
+          }).length;
+          return {
+            label: `${m.label},'${m.yearLabel}`,
+            value: count
+          };
+        });
+
+        const uClicksYearly = last4Years.map(year => {
+          const count = uVisits.filter(v => {
+            return new Date(v.timestamp).getFullYear() === year;
+          }).length;
+          return {
+            label: `${year}`,
+            value: count
+          };
+        });
+
+        let activeSelectedClicks = [];
+        if (selectedTimeRange === '7days') {
+          activeSelectedClicks = uClicks7Days;
+        } else if (selectedTimeRange === 'monthly') {
+          activeSelectedClicks = uClicksMonthly;
+        } else {
+          activeSelectedClicks = uClicksYearly;
+        }
+
         const deviceChartData = [
-          { label: 'Desktop', value: uDevices['Desktop'] || 0, color: '#8b00e0' },
+          { label: 'Desktop', value: uDevices['Desktop'] || 0, color: '#2563eb' },
           { label: 'Mobile', value: uDevices['Mobile'] || 0, color: '#10b981' },
           { label: 'Tablet', value: uDevices['Tablet'] || 0, color: '#f59e0b' }
         ];
 
-        const isLinkExpired = selectedUrl.expiresAt && new Date(selectedUrl.expiresAt) < new Date();
+        const isLinkExpired = selectedUrl.expiresAt && new Date(selectedUrl.expiresAt) < currentTime;
 
         return (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -500,7 +611,7 @@ const AnalyticsDashboard = ({
                     {isLinkExpired ? 'Expired' : 'Active'}
                   </span>
                   <p className="text-[9px] opacity-50 mt-1">
-                    {selectedUrl.expiresAt ? `Expires: ${new Date(selectedUrl.expiresAt).toLocaleDateString()}` : 'Permanent Link'}
+                    {selectedUrl.expiresAt ? `Expires: ${new Date(selectedUrl.expiresAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}` : 'Permanent Link'}
                   </p>
                 </div>
               </div>
@@ -516,18 +627,54 @@ const AnalyticsDashboard = ({
             {/* Graphics Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Click History bar chart */}
-              <div className={`lg:col-span-7 p-6 rounded-3xl border ${cardBgClass}`}>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-base font-bold">Click History</h4>
-                    <p className="text-xs opacity-60">Last 7 days of activity</p>
+              <div className={`lg:col-span-6 p-8 rounded-3xl border ${cardBgClass}`}>
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h4 className="text-base font-bold">Click History</h4>
+                      <p className="text-xs opacity-65">Track URL visitor trends</p>
+                    </div>
+                    
+                    {/* Range Selector Tabs */}
+                    <div className="flex p-1 rounded-xl bg-surface-100 dark:bg-surface-850 border border-surface-200/50 dark:border-surface-800 self-start sm:self-auto">
+                      <button
+                        onClick={() => setSelectedTimeRange('7days')}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all border-none cursor-pointer ${
+                          selectedTimeRange === '7days'
+                            ? 'bg-white dark:bg-surface-900 shadow-sm text-primary-500 font-black'
+                            : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        7 Days
+                      </button>
+                      <button
+                        onClick={() => setSelectedTimeRange('monthly')}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all border-none cursor-pointer ${
+                          selectedTimeRange === 'monthly'
+                            ? 'bg-white dark:bg-surface-900 shadow-sm text-primary-500 font-black'
+                            : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        Month
+                      </button>
+                      <button
+                        onClick={() => setSelectedTimeRange('yearly')}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all border-none cursor-pointer ${
+                          selectedTimeRange === 'yearly'
+                            ? 'bg-white dark:bg-surface-900 shadow-sm text-primary-500 font-black'
+                            : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        Year
+                      </button>
+                    </div>
                   </div>
-                  <BarChart data={uClicksByDay} isDark={isDark} />
+                  <BarChart data={activeSelectedClicks} isDark={isDark} />
                 </div>
               </div>
 
               {/* Devices */}
-              <div className={`lg:col-span-5 p-6 rounded-3xl border ${cardBgClass}`}>
+              <div className={`lg:col-span-6 p-8 rounded-3xl border ${cardBgClass}`}>
                 <DonutChart data={deviceChartData} isDark={isDark} title="Devices Breakdown" />
               </div>
             </div>
@@ -595,49 +742,73 @@ const AnalyticsDashboard = ({
             </div>
           </div>
 
-          {/* Metric cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* 1. Total links */}
-            <div className={`p-6 rounded-3xl border flex flex-col justify-between h-28 ${cardBgClass}`}>
-              <div className="flex justify-between items-center opacity-70">
-                <span className="text-xs font-bold uppercase tracking-wider">Total Links</span>
-              </div>
-              <div>
-                 <h3 className="text-2xl font-bold font-sans">{totalCreated}</h3>
-                <p className="text-[9px] opacity-50 mt-0.5">Shortlinks created overall</p>
-              </div>
-            </div>
-
-            {/* 2. Active links */}
-            <div className={`p-6 rounded-3xl border flex flex-col justify-between h-28 ${cardBgClass}`}>
-              <div className="flex justify-between items-center opacity-70">
-                <span className="text-xs font-bold uppercase tracking-wider">Active</span>
-              </div>
-              <div>
-                 <h3 className="text-2xl font-bold font-sans">{activeLinksCount}</h3>
-                <p className="text-[9px] opacity-50 mt-0.5">Active non-expired links</p>
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* 1. Total Links */}
+            <div className={`p-6 rounded-2xl border ${
+              isDark ? 'bg-surface-900/60 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
+            } text-left`}>
+              <div className="space-y-2">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Total Links
+                </span>
+                <h3 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                  {totalCreated}
+                </h3>
+                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">
+                  Shortlinks created overall
+                </p>
               </div>
             </div>
 
-            {/* 3. Expired links */}
-            <div className={`p-6 rounded-3xl border flex flex-col justify-between h-28 ${cardBgClass}`}>
-              <div className="flex justify-between items-center opacity-70">
-                <span className="text-xs font-bold uppercase tracking-wider">Expired</span>
-              </div>
-              <div>
-                 <h3 className="text-2xl font-bold font-sans">{expiredLinksCount}</h3>
-                <p className="text-[9px] opacity-50 mt-0.5">Expired time-limited links</p>
+            {/* 2. Active Links */}
+            <div className={`p-6 rounded-2xl border ${
+              isDark ? 'bg-surface-900/60 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
+            } text-left`}>
+              <div className="space-y-2">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Active
+                </span>
+                <h3 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                  {activeLinksCount}
+                </h3>
+                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">
+                  Active non-expired links
+                </p>
               </div>
             </div>
 
-            {/* 4. Total clicks */}
-            <div className={`p-6 rounded-3xl border flex flex-col justify-between h-28 ${cardBgClass}`}>
-              <div className="flex justify-between items-center opacity-70">
-                <span className="text-xs font-bold uppercase tracking-wider">Total Clicks</span>
+            {/* 3. Expired Links */}
+            <div className={`p-6 rounded-2xl border ${
+              isDark ? 'bg-surface-900/60 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
+            } text-left`}>
+              <div className="space-y-2">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Expired
+                </span>
+                <h3 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                  {expiredLinksCount}
+                </h3>
+                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">
+                  Expired time-limited links
+                </p>
               </div>
-              <div>
-                 <h3 className="text-2xl font-bold font-sans">{totalClicks}</h3>
-                <p className="text-[9px] opacity-50 mt-0.5">Redirections resolved globally</p>
+            </div>
+
+            {/* 4. Total Clicks */}
+            <div className={`p-6 rounded-2xl border ${
+              isDark ? 'bg-surface-900/60 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
+            } text-left`}>
+              <div className="space-y-2">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Total Clicks
+                </span>
+                <h3 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                  {totalClicks}
+                </h3>
+                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">
+                  Redirections resolved globally
+                </p>
               </div>
             </div>
           </div>
@@ -645,21 +816,57 @@ const AnalyticsDashboard = ({
           {/* Core Graphics layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Click History bar chart */}
-            <div className={`lg:col-span-7 p-6 rounded-3xl border ${cardBgClass}`}>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-base font-bold">Click History</h4>
-                  <p className="text-xs opacity-60">Last 7 days of activity</p>
+            <div className={`lg:col-span-6 p-8 rounded-3xl border ${cardBgClass}`}>
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="text-base font-bold">Click History</h4>
+                    <p className="text-xs opacity-65">Track global visitor trends</p>
+                  </div>
+                  
+                  {/* Range Selector Tabs */}
+                  <div className="flex p-1 rounded-xl bg-surface-100 dark:bg-surface-850 border border-surface-200/50 dark:border-surface-800 self-start sm:self-auto">
+                    <button
+                      onClick={() => setGlobalTimeRange('7days')}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all border-none cursor-pointer ${
+                        globalTimeRange === '7days'
+                          ? 'bg-white dark:bg-surface-900 shadow-sm text-primary-500 font-black'
+                          : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      7 Days
+                    </button>
+                    <button
+                      onClick={() => setGlobalTimeRange('monthly')}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all border-none cursor-pointer ${
+                        globalTimeRange === 'monthly'
+                          ? 'bg-white dark:bg-surface-900 shadow-sm text-primary-500 font-black'
+                          : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      Month
+                    </button>
+                    <button
+                      onClick={() => setGlobalTimeRange('yearly')}
+                      className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all border-none cursor-pointer ${
+                        globalTimeRange === 'yearly'
+                          ? 'bg-white dark:bg-surface-900 shadow-sm text-primary-500 font-black'
+                          : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      Year
+                    </button>
+                  </div>
                 </div>
-                <BarChart data={globalClicksByDay} isDark={isDark} />
+                <BarChart data={activeGlobalClicks} isDark={isDark} />
               </div>
             </div>
 
             {/* Devices breakdown */}
-            <div className={`lg:col-span-5 p-6 rounded-3xl border ${cardBgClass}`}>
+            <div className={`lg:col-span-6 p-8 rounded-3xl border ${cardBgClass}`}>
               <DonutChart 
                 data={[
-                  { label: 'Desktop', value: globalDevices['Desktop'] || 0, color: '#8b00e0' },
+                  { label: 'Desktop', value: globalDevices['Desktop'] || 0, color: '#2563eb' },
                   { label: 'Mobile', value: globalDevices['Mobile'] || 0, color: '#10b981' },
                   { label: 'Tablet', value: globalDevices['Tablet'] || 0, color: '#f59e0b' }
                 ]} 
@@ -722,7 +929,7 @@ const AnalyticsDashboard = ({
 
                 {/* Rows */}
                 {topPerformanceUrls.map((url, index) => {
-                  const isExpired = url.expiresAt && new Date(url.expiresAt) < new Date();
+                  const isExpired = url.expiresAt && new Date(url.expiresAt) < currentTime;
                   return (
                     <div
                       key={url._id}
@@ -805,7 +1012,7 @@ const AnalyticsDashboard = ({
               {/* Mobile view: Stacked List */}
               <div className="block md:hidden space-y-3">
                 {topPerformanceUrls.map((url, index) => {
-                  const isExpired = url.expiresAt && new Date(url.expiresAt) < new Date();
+                  const isExpired = url.expiresAt && new Date(url.expiresAt) < currentTime;
                   return (
                     <div
                       key={url._id}

@@ -101,7 +101,7 @@ const Signup = () => {
 
       <div className={`relative z-10 w-full max-w-md p-8 md:p-10 rounded-3xl backdrop-blur-xl border transition-all duration-300 ${
         isDark 
-          ? 'glass-card border-violet-500/20 shadow-[0_20px_50px_rgba(10,4,32,0.6)]' 
+          ? 'glass-card border-primary-500/20 shadow-[0_20px_50px_rgba(10,4,32,0.6)]' 
           : 'bg-white/80 border-surface-200 shadow-surface-500/10'
       }`}>
         
@@ -124,7 +124,7 @@ const Signup = () => {
           {/* Name Input */}
           <div>
             <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-surface-300' : 'text-surface-700'}`}>Full Name</label>
-            <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-violet-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
+            <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-primary-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
               <User size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
               <input
                 type="text"
@@ -141,7 +141,7 @@ const Signup = () => {
           {/* Email Input */}
           <div>
             <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-surface-300' : 'text-surface-700'}`}>Email Address</label>
-            <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-violet-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
+            <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-primary-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
               <Mail size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
               <input
                 type="email"
@@ -158,7 +158,7 @@ const Signup = () => {
           {/* Password Input */}
           <div>
             <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-surface-300' : 'text-surface-700'}`}>Password</label>
-            <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-violet-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
+            <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-primary-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
               <Lock size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
               <input
                 type="password"
@@ -175,7 +175,7 @@ const Signup = () => {
           {/* Confirm Password Input */}
           <div>
             <label className={`block text-sm font-medium mb-1.5 ${isDark ? 'text-surface-300' : 'text-surface-700'}`}>Confirm Password</label>
-            <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-violet-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
+            <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-primary-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
               <Lock size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
               <input
                 type="password"

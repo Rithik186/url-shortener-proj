@@ -6,6 +6,7 @@ import LandingPage from './pages/LandingPage'
 import AuthPage from './pages/AuthPage'
 import HomePage from './pages/HomePage'
 import PublicStatsPage from './pages/PublicStatsPage'
+import OfflineOverlay from './Components/OfflineOverlay'
 import './index.css'
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
               duration: 1500,
             }}
           />
+          <OfflineOverlay />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<AuthPage />} />

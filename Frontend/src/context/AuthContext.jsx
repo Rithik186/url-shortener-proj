@@ -14,7 +14,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check if user exists in local storage on load
     const storedUser = localStorage.getItem('nebula-user')
-    if (storedUser) {
+    const sessionActive = sessionStorage.getItem('nebula-session-active')
+    if (storedUser && sessionActive === 'true') {
       setUser(JSON.parse(storedUser))
       setIsAuthenticated(true)
     }
@@ -26,7 +27,16 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(true)
     localStorage.setItem('nebula-user', JSON.stringify(userData))
     if (token) localStorage.setItem('nebula-token', token)
+    sessionStorage.setItem('nebula-session-active', 'true')
     toast.success('Login successful! Welcome back.', { duration: 1500 })
+    navigate('/home')
+  }
+
+  const confirmSession = (userData) => {
+    setUser(userData)
+    setIsAuthenticated(true)
+    sessionStorage.setItem('nebula-session-active', 'true')
+    toast.success(`Welcome back, ${userData.name || 'User'}!`, { duration: 1500 })
     navigate('/home')
   }
 
@@ -40,12 +50,13 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false)
     localStorage.removeItem('nebula-user')
     localStorage.removeItem('nebula-token')
+    sessionStorage.removeItem('nebula-session-active')
     toast.success('Logged out successfully.')
     navigate('/login')
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout, updateUser, confirmSession }}>
       {children}
     </AuthContext.Provider>
   )
