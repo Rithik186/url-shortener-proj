@@ -9,6 +9,7 @@ import Footer from '../Components/Footer'
 import logo from '../assets/logo.svg'
 import { Sun, Moon, X, User, Mail, MessageSquare, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { API_BASE_URL } from '../config'
 
 const LandingPage = () => {
   const { isDark, toggleTheme } = useTheme()
@@ -31,7 +32,7 @@ const LandingPage = () => {
     e.preventDefault()
     setIsSendingContact(true)
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/contact', {
+      const response = await fetch(`${API_BASE_URL}/api/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

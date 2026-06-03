@@ -7,6 +7,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import toast from 'react-hot-toast';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config';
 
 const AuthPage = () => {
   const { isDark } = useTheme();
@@ -58,7 +59,7 @@ const AuthPage = () => {
         }
       }
 
-      const response = await fetch(`http://127.0.0.1:5000${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

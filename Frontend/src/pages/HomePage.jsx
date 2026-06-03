@@ -10,6 +10,7 @@ import {
 import toast from 'react-hot-toast'
 import { useNavigate, Link } from 'react-router-dom'
 import QRCode from 'qrcode'
+import { API_BASE_URL } from '../config'
 import MagicBento from '../Components/MagicBento'
 import Dock from '../Components/Dock'
 import AnalyticsDashboard from '../Components/AnalyticsDashboard'
@@ -93,7 +94,7 @@ const HomePage = () => {
 
   useEffect(() => {
     if (selectedQrUrl) {
-      const fullUrl = `http://127.0.0.1:5000/${selectedQrUrl.shortCode}`
+      const fullUrl = `${API_BASE_URL}/${selectedQrUrl.shortCode}`
       QRCode.toDataURL(
         fullUrl, 
         { 
@@ -146,7 +147,7 @@ const HomePage = () => {
   const fetchUrls = async () => {
     try {
       const token = localStorage.getItem('nebula-token')
-      const response = await fetch('http://127.0.0.1:5000/api/urls', {
+      const response = await fetch(`${API_BASE_URL}/api/urls`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (response.status === 401) {
@@ -166,7 +167,7 @@ const HomePage = () => {
 
         // Set default QR text to last shortened URL if available
         if (data.urls.length > 0 && !qrText) {
-          setQrText(`http://127.0.0.1:5000/${data.urls[0].shortCode}`)
+          setQrText(`${API_BASE_URL}/${data.urls[0].shortCode}`)
         }
       }
     } catch (error) {
@@ -250,7 +251,7 @@ const HomePage = () => {
         for (let index = 0; index < rows.length; index++) {
           const row = rows[index]
           try {
-            const response = await fetch('http://127.0.0.1:5000/api/urls/shorten', {
+            const response = await fetch(`${API_BASE_URL}/api/urls/shorten`, {
               method: 'POST',
               headers: { 
                 'Content-Type': 'application/json',
@@ -296,7 +297,7 @@ const HomePage = () => {
     setIsShortening(true)
     try {
       const token = localStorage.getItem('nebula-token')
-      const response = await fetch('http://127.0.0.1:5000/api/urls/shorten', {
+      const response = await fetch(`${API_BASE_URL}/api/urls/shorten`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -321,7 +322,7 @@ const HomePage = () => {
         const updatedUrls = [data.url, ...urls]
         setUrls(updatedUrls)
         localStorage.setItem('nebula-cached-urls', JSON.stringify(updatedUrls))
-        setQrText(`http://127.0.0.1:5000/${data.url.shortCode}`)
+        setQrText(`${API_BASE_URL}/${data.url.shortCode}`)
         setShowAdvanced(false)
       } else {
         toast.error(data.message || 'Failed to shorten URL')
@@ -337,7 +338,7 @@ const HomePage = () => {
     if (!window.confirm('Are you sure you want to delete this link?')) return
     try {
       const token = localStorage.getItem('nebula-token')
-      const response = await fetch(`http://127.0.0.1:5000/api/urls/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/urls/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       })
@@ -360,7 +361,7 @@ const HomePage = () => {
   }
 
   const handleCopy = (shortCode, id) => {
-    const fullUrl = `http://127.0.0.1:5000/${shortCode}`
+    const fullUrl = `${API_BASE_URL}/${shortCode}`
     navigator.clipboard.writeText(fullUrl)
     setCopiedId(id)
     toast.success('Copied to clipboard!')
@@ -387,7 +388,7 @@ const HomePage = () => {
     setIsSavingEdit(true)
     try {
       const token = localStorage.getItem('nebula-token')
-      const response = await fetch(`http://127.0.0.1:5000/api/urls/${selectedUrlForEdit._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/urls/${selectedUrlForEdit._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -462,7 +463,7 @@ const HomePage = () => {
     setIsUpdatingProfile(true)
     try {
       const token = localStorage.getItem('nebula-token')
-      const response = await fetch('http://127.0.0.1:5000/api/auth/update-profile', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -938,7 +939,7 @@ const HomePage = () => {
                               <div className="min-w-0 flex-1 space-y-1.5">
                                 <div className="flex flex-wrap items-center gap-2">
                                   <a 
-                                    href={`http://127.0.0.1:5000/${url.shortCode}`}
+                                    href={`${API_BASE_URL}/${url.shortCode}`}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="font-bold text-base text-primary-500 hover:text-primary-400 no-underline inline-flex items-center gap-1"
@@ -1005,8 +1006,8 @@ const HomePage = () => {
                                   <QrCode size={14} />
                                 </button>
 
-                                <button 
-                                  onClick={() => handleWhatsAppShare(`http://127.0.0.1:5000/${url.shortCode}`)}
+                                 <button 
+                                  onClick={() => handleWhatsAppShare(`${API_BASE_URL}/${url.shortCode}`)}
                                   className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
                                     isDark ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600'
                                   }`}
@@ -1016,7 +1017,7 @@ const HomePage = () => {
                                 </button>
 
                                 <button 
-                                  onClick={() => handleSystemShare(`http://127.0.0.1:5000/${url.shortCode}`)}
+                                  onClick={() => handleSystemShare(`${API_BASE_URL}/${url.shortCode}`)}
                                   className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
                                     isDark ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
                                   }`}
@@ -1246,7 +1247,7 @@ const HomePage = () => {
                             <div className="min-w-0 flex-1 space-y-1.5">
                               <div className="flex flex-wrap items-center gap-2">
                                 <a 
-                                  href={`http://127.0.0.1:5000/${url.shortCode}`}
+                                  href={`${API_BASE_URL}/${url.shortCode}`}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="font-bold text-base text-primary-500 hover:text-primary-400 no-underline inline-flex items-center gap-1"
@@ -1314,7 +1315,7 @@ const HomePage = () => {
                               </button>
 
                               <button 
-                                onClick={() => handleWhatsAppShare(`http://127.0.0.1:5000/${url.shortCode}`)}
+                                onClick={() => handleWhatsAppShare(`${API_BASE_URL}/${url.shortCode}`)}
                                 className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
                                   isDark ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-600'
                                 }`}
@@ -1324,7 +1325,7 @@ const HomePage = () => {
                               </button>
 
                               <button 
-                                onClick={() => handleSystemShare(`http://127.0.0.1:5000/${url.shortCode}`)}
+                                onClick={() => handleSystemShare(`${API_BASE_URL}/${url.shortCode}`)}
                                 className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${
                                   isDark ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400' : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
                                 }`}
@@ -1698,7 +1699,7 @@ const HomePage = () => {
                 </p>
                 <div className="grid grid-cols-2 gap-3 w-full">
                   <button 
-                    onClick={() => handleWhatsAppShare(`http://127.0.0.1:5000/${selectedQrUrl.shortCode}`)}
+                    onClick={() => handleWhatsAppShare(`${API_BASE_URL}/${selectedQrUrl.shortCode}`)}
                     className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold border-none cursor-pointer transition-all shadow-md shadow-emerald-600/10"
                     title="Share on WhatsApp"
                   >
@@ -1707,7 +1708,7 @@ const HomePage = () => {
                   </button>
 
                   <button 
-                    onClick={() => handleSystemShare(`http://127.0.0.1:5000/${selectedQrUrl.shortCode}`)}
+                    onClick={() => handleSystemShare(`${API_BASE_URL}/${selectedQrUrl.shortCode}`)}
                     className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-xs font-bold border-none cursor-pointer transition-all shadow-md shadow-blue-600/10"
                     title="Share Link"
                   >

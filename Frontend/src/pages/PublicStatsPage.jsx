@@ -6,6 +6,7 @@ import {
   Search, Eye, Laptop, Globe, MessageSquare, Share2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { API_BASE_URL } from '../config'
 
 const WhatsAppIcon = ({ size = 16, className = '' }) => (
   <svg 
@@ -29,7 +30,7 @@ const PublicStatsPage = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:5000/api/urls/stats/${shortCode}`)
+        const response = await fetch(`${API_BASE_URL}/api/urls/stats/${shortCode}`)
         const data = await response.json()
         if (data.success) {
           setStats(data.stats)
@@ -137,7 +138,7 @@ const PublicStatsPage = () => {
             </div>
             <div className="flex items-center gap-3">
               <a 
-                href={`http://127.0.0.1:5000/${stats.shortCode}`} 
+                href={`${API_BASE_URL}/${stats.shortCode}`} 
                 target="_blank" 
                 rel="noreferrer"
                 className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-xs font-bold transition-all border-none cursor-pointer no-underline shadow-lg shadow-primary-500/25"

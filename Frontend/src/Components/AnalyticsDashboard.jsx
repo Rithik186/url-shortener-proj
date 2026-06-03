@@ -4,6 +4,7 @@ import {
   ChevronRight, Calendar, Compass, ShieldAlert, ChevronDown
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 
 // ----------------------------------------------------
 // Custom SVG Donut Chart
@@ -445,7 +446,7 @@ const AnalyticsDashboard = ({
                   Public Stats
                 </Link>
                 <a 
-                  href={`http://127.0.0.1:5000/${selectedUrl.shortCode}`}
+                  href={`${API_BASE_URL}/${selectedUrl.shortCode}`}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border-none cursor-pointer no-underline bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20"
