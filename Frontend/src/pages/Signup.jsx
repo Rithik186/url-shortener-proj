@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Link2, Mail, Lock, User, ArrowRight, Loader2, ArrowLeft } from 'lucide-react'
+import { Link2, Mail, Lock, User, ArrowRight, Loader2, ArrowLeft, Eye, EyeOff, CheckCircle2, XCircle } from 'lucide-react'
 import { useGoogleLogin } from '@react-oauth/google'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
@@ -19,6 +19,25 @@ const Signup = () => {
     confirmPassword: ''
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  const getPasswordStrength = (pass) => {
+    if (!pass) return { score: 0, text: '', color: 'bg-slate-200' }
+    if (pass.length < 6) return { score: 1, text: 'Weak', color: 'bg-red-500' }
+    
+    let hasLetter = /[a-zA-Z]/.test(pass);
+    let hasNumber = /[0-9]/.test(pass);
+    let hasSpecial = /[^A-Za-z0-9]/.test(pass);
+    
+    const count = [hasLetter, hasNumber, hasSpecial].filter(Boolean).length;
+    if (pass.length >= 8 && count === 3) {
+      return { score: 3, text: 'Strong', color: 'bg-emerald-500' }
+    }
+    return { score: 2, text: 'Medium', color: 'bg-amber-500' }
+  }
+
+  const strength = getPasswordStrength(formData.password)
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -161,15 +180,41 @@ const Signup = () => {
             <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-primary-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
               <Lock size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className={`w-full bg-transparent border-none outline-none py-3 pl-11 pr-4 text-sm ${isDark ? 'text-white placeholder-surface-600' : 'text-surface-900 placeholder-surface-400'}`}
+                className={`w-full bg-transparent border-none outline-none py-3 pl-11 pr-12 text-sm ${isDark ? 'text-white placeholder-surface-600' : 'text-surface-900 placeholder-surface-400'}`}
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className={`absolute right-4 p-1 hover:opacity-85 cursor-pointer border-none bg-transparent ${isDark ? 'text-surface-500' : 'text-surface-400'}`}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
+            
+            {/* Password Strength Indicator */}
+            {formData.password && (
+              <div className="mt-2 space-y-1">
+                <div className="flex justify-between items-center text-[11px] font-bold">
+                  <span className={isDark ? 'text-surface-400' : 'text-surface-500'}>Password strength:</span>
+                  <span className={
+                    strength.text === 'Strong' ? 'text-emerald-500' : 
+                    strength.text === 'Medium' ? 'text-amber-500' : 'text-red-500'
+                  }>{strength.text}</span>
+                </div>
+                <div className="flex gap-1 h-1 w-full rounded-full overflow-hidden bg-slate-200 dark:bg-surface-805">
+                  <div className={`h-full rounded-full transition-all duration-300 ${strength.color}`} style={{ width: strength.score === 1 ? '33.3%' : strength.score === 2 ? '66.6%' : '100%' }} />
+                </div>
+                <p className={`text-[10px] ${isDark ? 'text-surface-500' : 'text-surface-400'}`}>
+                  Use 6+ characters. Recommend numbers and special symbols.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Confirm Password Input */}
@@ -178,15 +223,39 @@ const Signup = () => {
             <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-primary-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
               <Lock size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
               <input
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
-                className={`w-full bg-transparent border-none outline-none py-3 pl-11 pr-4 text-sm ${isDark ? 'text-white placeholder-surface-600' : 'text-surface-900 placeholder-surface-400'}`}
+                className={`w-full bg-transparent border-none outline-none py-3 pl-11 pr-12 text-sm ${isDark ? 'text-white placeholder-surface-600' : 'text-surface-900 placeholder-surface-400'}`}
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className={`absolute right-4 p-1 hover:opacity-85 cursor-pointer border-none bg-transparent ${isDark ? 'text-surface-500' : 'text-surface-400'}`}
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
+
+            {/* Match Indicator */}
+            {formData.confirmPassword && (
+              <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-bold">
+                {formData.password === formData.confirmPassword ? (
+                  <>
+                    <CheckCircle2 size={12} className="text-emerald-500" />
+                    <span className="text-emerald-500">Passwords match</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle size={12} className="text-red-500" />
+                    <span className="text-red-500">Passwords do not match</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <button
@@ -210,7 +279,7 @@ const Signup = () => {
         </div>
 
         <button
-          onClick={() => handleGoogleSignup()}
+          onClick={() => toast.error('Google authentication is currently not available. Coming soon!')}
           type="button"
           className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border transition-all cursor-pointer font-medium text-sm ${
             isDark 

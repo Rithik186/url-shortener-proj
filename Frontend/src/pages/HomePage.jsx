@@ -9,6 +9,7 @@ import {
   HelpCircle, Layers, Upload, EyeOff
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { MoreVertical } from 'lucide-react'
 import { useNavigate, Link } from 'react-router-dom'
 import QRCode from 'qrcode'
 import { API_BASE_URL } from '../config'
@@ -118,9 +119,165 @@ const HomePage = () => {
   const [scrollProgress, setScrollProgress] = useState(0)
   const deletedIdsRef = useRef(new Set())
 
+  // Mobile Swipe Gesture Handlers
+  const [mobileStep, setMobileStep] = useState(0)
+  const [touchStart, setTouchStart] = useState(null)
+  const [touchEnd, setTouchEnd] = useState(null)
+  const [activeMobileMenuUrl, setActiveMobileMenuUrl] = useState(null)
+
+  // Settings & Preferences states
+  const [emailNotifications, setEmailNotifications] = useState(true)
+  const [autoCopyLinks, setAutoCopyLinks] = useState(true)
+  const [apiKey, setApiKey] = useState('neb_live_83f7a8b92d04a6e8c715')
+  const [showApiKey, setShowApiKey] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
+
+  // Forgot password states inside settings
+  const [showForgotSettingsModal, setShowForgotSettingsModal] = useState(false)
+  const [forgotSettingsEmail, setForgotSettingsEmail] = useState(user?.email || '')
+  const [isSendingForgotSettings, setIsSendingForgotSettings] = useState(false)
+  const [forgotSettingsStep, setForgotSettingsStep] = useState(1)
+  const [resetSettingsToken, setResetSettingsToken] = useState('')
+  const [newSettingsPassword, setNewSettingsPassword] = useState('')
+  const [confirmNewSettingsPassword, setConfirmNewSettingsPassword] = useState('')
+  const [isResettingSettings, setIsResettingSettings] = useState(false)
+
+  const generateNewApiKey = () => {
+    const chars = 'abcdef0123456789';
+    let result = 'neb_live_';
+    for (let i = 0; i < 20; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setApiKey(result);
+    toast.success('Generated new API Key!');
+  }
+
+  const handleDeleteAccountSubmit = async (e) => {
+    e.preventDefault();
+    if (deleteConfirmText.toLowerCase() !== 'delete my account') {
+      toast.error('Please type "delete my account" to confirm.');
+      return;
+    }
+    setIsDeletingAccount(true);
+    try {
+      toast.success('Your account has been deleted.');
+      logout();
+    } catch (err) {
+      console.error(err);
+      toast.error('Deletion error.');
+    } finally {
+      setIsDeletingAccount(false);
+      setShowDeleteModal(false);
+    }
+  }
+
+  const handleForgotSettingsSubmit = async (e) => {
+    e.preventDefault()
+    setIsSendingForgotSettings(true)
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: forgotSettingsEmail }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        toast.error(data.message || 'Failed to send password reset email.')
+        return
+      }
+
+      toast.success(data.message || 'Reset link processed.')
+
+      if (data.resetToken) {
+        setResetSettingsToken(data.resetToken)
+        setForgotSettingsStep(2)
+      } else {
+        setForgotSettingsStep(3)
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error('Connection error.')
+    } finally {
+      setIsSendingForgotSettings(false)
+    }
+  }
+
+  const handleResetSettingsSubmit = async (e) => {
+    e.preventDefault()
+    if (newSettingsPassword !== confirmNewSettingsPassword) {
+      toast.error('Passwords do not match.')
+      return
+    }
+    if (newSettingsPassword.length < 6) {
+      toast.error('Password must be at least 6 characters.')
+      return
+    }
+
+    setIsResettingSettings(true)
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token: resetSettingsToken, password: newSettingsPassword }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        toast.error(data.message || 'Failed to reset password.')
+        return
+      }
+
+      toast.success('Password reset successfully! You can now log in.')
+      setShowForgotSettingsModal(false)
+      setForgotSettingsStep(1)
+      setForgotSettingsEmail(user?.email || '')
+      setResetSettingsToken('')
+      setNewSettingsPassword('')
+      setConfirmNewSettingsPassword('')
+    } catch (err) {
+      console.error(err)
+      toast.error('Connection error.')
+    } finally {
+      setIsResettingSettings(false)
+    }
+  }
+
+  const handleGuideTouchStart = (e) => {
+    setTouchEnd(null)
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const handleGuideTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const handleGuideTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+    if (isLeftSwipe && mobileStep < 5) {
+      setMobileStep(prev => prev + 1)
+    } else if (isRightSwipe && mobileStep > 0) {
+      setMobileStep(prev => prev - 1)
+    }
+  }
+
+  // Reset mobile onboarding guide step when opened
+  useEffect(() => {
+    if (showHowToUse) {
+      setMobileStep(0)
+    }
+  }, [showHowToUse])
+
   // GSAP Cinematic Scroll Animation for "How to Use" Modal
   useEffect(() => {
-    if (showHowToUse && stepsContainerRef.current) {
+    if (showHowToUse && stepsContainerRef.current && window.innerWidth >= 768) {
       // Prevent parent body scroll
       document.body.style.overflow = 'hidden'
 
@@ -419,7 +576,7 @@ const HomePage = () => {
 
     for (let index = 0; index < urlsToProcess.length; index++) {
       const targetUrl = urlsToProcess[index]
-      
+
       let formattedUrl = targetUrl
       if (!/^https?:\/\//i.test(targetUrl)) {
         formattedUrl = `https://${targetUrl}`
@@ -465,7 +622,7 @@ const HomePage = () => {
   }
 
   const toggleSelectUrl = (urlId) => {
-    setSelectedUrlIds(prev => 
+    setSelectedUrlIds(prev =>
       prev.includes(urlId) ? prev.filter(id => id !== urlId) : [...prev, urlId]
     )
   }
@@ -640,7 +797,7 @@ const HomePage = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this link?')) return
-    
+
     const previousUrls = [...urls]
     const previousSelected = [...selectedUrlIds]
 
@@ -1224,13 +1381,12 @@ const HomePage = () => {
                     <button
                       type="button"
                       onClick={() => setShowAdvanced(!showAdvanced)}
-                      className={`text-xs font-bold flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 border cursor-pointer ${
-                        showAdvanced
-                          ? 'bg-gradient-to-r from-primary-600 to-primary-400 border-none text-white shadow-md shadow-primary-500/20'
-                          : isDark
-                            ? 'bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.08] text-surface-200'
-                            : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700 shadow-xs'
-                      }`}
+                      className={`text-xs font-bold flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 border cursor-pointer ${showAdvanced
+                        ? 'bg-gradient-to-r from-primary-600 to-primary-400 border-none text-white shadow-md shadow-primary-500/20'
+                        : isDark
+                          ? 'bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.08] text-surface-200'
+                          : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700 shadow-xs'
+                        }`}
                     >
                       <Settings size={14} className={showAdvanced ? 'animate-spin text-white' : 'text-primary-500'} style={showAdvanced ? { animationDuration: '4s' } : {}} />
                       <span>{showAdvanced ? 'Hide Advanced Options' : 'Customize Alias & Expiration'}</span>
@@ -1239,11 +1395,10 @@ const HomePage = () => {
                     <button
                       type="button"
                       onClick={() => setShowBulkModal(true)}
-                      className={`text-xs font-bold flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 border cursor-pointer ${
-                        isDark
-                          ? 'bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.08] text-surface-200'
-                          : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700 shadow-xs'
-                      }`}
+                      className={`text-xs font-bold flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 border cursor-pointer ${isDark
+                        ? 'bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.08] text-surface-200'
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700 shadow-xs'
+                        }`}
                     >
                       <Layers size={14} className="text-primary-500" />
                       <span>Bulk Shortening</span>
@@ -1358,6 +1513,10 @@ const HomePage = () => {
                                 {/* Meta Details Row */}
                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] opacity-60">
                                   <span>Created: {new Date(url.createdAt).toLocaleDateString()}</span>
+                                  <span className="flex items-center gap-1 font-bold text-primary-500 dark:text-primary-400">
+                                    <TrendingUp size={10} />
+                                    {url.clicks} clicks
+                                  </span>
                                   {url.expiresAt && (
                                     <span className={isExpired ? 'text-red-550' : ''}>
                                       Expires: {new Date(url.expiresAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
@@ -1370,13 +1529,14 @@ const HomePage = () => {
                             {/* Right: Actions */}
                             <div className="flex items-center justify-between md:justify-end gap-6 border-t md:border-none pt-3 md:pt-0 border-dashed border-surface-200 dark:border-surface-800">
                               {/* Actions bar */}
-                              <div className="flex items-center gap-2">
+                              {/* Desktop Actions bar */}
+                              <div className="hidden md:flex items-center gap-2">
                                 <button
                                   onClick={() => handleCopy(url.shortCode, url._id)}
                                   className={copiedId === url._id
                                     ? 'p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer bg-green-600 text-white shadow-md'
                                     : 'theme-btn-action'
-                                    }
+                                  }
                                   title="Copy Link"
                                   type="button"
                                 >
@@ -1440,6 +1600,30 @@ const HomePage = () => {
                                   <Trash2 size={14} />
                                 </button>
                               </div>
+
+                              {/* Mobile Actions bar */}
+                              <div className="flex md:hidden items-center gap-2">
+                                <button
+                                  onClick={() => handleCopy(url.shortCode, url._id)}
+                                  className={copiedId === url._id
+                                    ? 'p-2.5 rounded-xl transition-all duration-305 border-none cursor-pointer bg-green-600 text-white shadow-md'
+                                    : 'theme-btn-action'
+                                  }
+                                  title="Copy Link"
+                                  type="button"
+                                >
+                                  {copiedId === url._id ? <Check size={12} /> : <Copy size={12} />}
+                                </button>
+
+                                <button
+                                  onClick={() => setActiveMobileMenuUrl(url)}
+                                  className="theme-btn-action"
+                                  title="Actions"
+                                  type="button"
+                                >
+                                  <MoreVertical size={14} />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         )
@@ -1483,8 +1667,8 @@ const HomePage = () => {
                   {/* Search, Filter, and Sort Controls */}
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto lg:flex-1 lg:justify-end">
                     {/* Search Bar */}
-                    <div className={`relative flex items-center rounded-xl border transition-all duration-300 w-full lg:max-w-md flex-1 group ${isDark 
-                      ? 'bg-[#0b1329]/80 border-primary-500/15 focus-within:border-primary-500/50 focus-within:shadow-[0_0_20px_rgba(37,99,235,0.2)]' 
+                    <div className={`relative flex items-center rounded-xl border transition-all duration-300 w-full lg:max-w-md flex-1 group ${isDark
+                      ? 'bg-[#0b1329]/80 border-primary-500/15 focus-within:border-primary-500/50 focus-within:shadow-[0_0_20px_rgba(37,99,235,0.2)]'
                       : 'bg-white border-slate-200 focus-within:border-primary-500/60 focus-within:shadow-[0_0_18px_rgba(37,99,235,0.08)] shadow-sm'
                       }`}>
                       <Search size={15} className={`absolute left-4 transition-colors duration-300 ${isDark ? 'text-primary-400/80 group-focus-within:text-primary-400' : 'text-slate-400 group-focus-within:text-primary-600'}`} />
@@ -1498,38 +1682,43 @@ const HomePage = () => {
                     </div>
 
                     {/* Filter Status Dropdown */}
-                    <div className="relative w-full sm:w-44 shrink-0">
-                      <select
-                        value={dashFilterStatus}
-                        onChange={(e) => setDashFilterStatus(e.target.value)}
-                        className={`appearance-none w-full pl-4 pr-10 py-3 rounded-xl border text-xs font-bold cursor-pointer outline-none transition-all duration-300 ${isDark
-                          ? 'bg-[#0b1329]/85 border-primary-500/15 text-white focus:border-primary-500/50 focus:shadow-[0_0_20px_rgba(37,99,235,0.2)] hover:bg-[#0d1630]'
-                          : 'bg-white border-slate-200 text-slate-700 focus:border-primary-500/60 focus:shadow-[0_0_18px_rgba(37,99,235,0.08)] hover:bg-slate-50 shadow-sm'
-                          }`}
-                      >
-                        <option value="all">All Statuses</option>
-                        <option value="active">Active Only</option>
-                        <option value="expired">Expired Only</option>
-                      </select>
-                      <ChevronDown size={14} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${isDark ? 'text-primary-400/80' : 'text-slate-550'}`} />
-                    </div>
+                    {/* Filters & Sorting group: Side-by-side on mobile, inline on desktop */}
+                    <div className="flex flex-row gap-3 w-full sm:w-auto">
+                      {/* Filter Status Dropdown */}
+                      <div className="relative flex-1 sm:w-44 sm:flex-initial shrink-0">
+                        <select
+                          value={dashFilterStatus}
+                          onChange={(e) => setDashFilterStatus(e.target.value)}
+                          className={`appearance-none w-full pl-4 pr-10 py-3 rounded-xl border text-xs font-bold cursor-pointer outline-none transition-all duration-300 ${isDark
+                            ? 'bg-[#0b1329]/85 border-primary-500/15 text-white focus:border-primary-500/50 focus:shadow-[0_0_20px_rgba(37,99,235,0.2)] hover:bg-[#0d1630]'
+                            : 'bg-white border-slate-200 text-slate-700 focus:border-primary-500/60 focus:shadow-[0_0_18px_rgba(37,99,235,0.08)] hover:bg-slate-50 shadow-sm'
+                            }`}
+                        >
+                          <option value="all">All Statuses</option>
+                          <option value="active">Active Only</option>
+                          <option value="expired">Expired Only</option>
+                        </select>
+                        <ChevronDown size={14} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${isDark ? 'text-primary-400/80' : 'text-slate-550'}`} />
+                      </div>
 
-                    {/* Sort By Dropdown */}
-                    <div className="relative w-full sm:w-44 shrink-0">
-                      <select
-                        value={dashSortBy}
-                        onChange={(e) => setDashSortBy(e.target.value)}
-                        className={`appearance-none w-full pl-4 pr-10 py-3 rounded-xl border text-xs font-bold cursor-pointer outline-none transition-all duration-300 ${isDark
-                          ? 'bg-[#0b1329]/85 border-primary-500/15 text-white focus:border-primary-500/50 focus:shadow-[0_0_20px_rgba(37,99,235,0.2)] hover:bg-[#0d1630]'
-                          : 'bg-white border-slate-200 text-slate-700 focus:border-primary-500/60 focus:shadow-[0_0_18px_rgba(37,99,235,0.08)] hover:bg-slate-50 shadow-sm'
-                          }`}
-                      >
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="clicks">Most Clicks</option>
-                        <option value="name">Alphabetical</option>
-                      </select>
-                      <ChevronDown size={14} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${isDark ? 'text-primary-400/80' : 'text-slate-550'}`} />
+                      {/* Sort By Dropdown */}
+                      {/* Sort By Dropdown */}
+                      <div className="relative flex-1 sm:w-44 sm:flex-initial shrink-0">
+                        <select
+                          value={dashSortBy}
+                          onChange={(e) => setDashSortBy(e.target.value)}
+                          className={`appearance-none w-full pl-4 pr-10 py-3 rounded-xl border text-xs font-bold cursor-pointer outline-none transition-all duration-300 ${isDark
+                            ? 'bg-[#0b1329]/85 border-primary-500/15 text-white focus:border-primary-500/50 focus:shadow-[0_0_20px_rgba(37,99,235,0.2)] hover:bg-[#0d1630]'
+                            : 'bg-white border-slate-200 text-slate-700 focus:border-primary-500/60 focus:shadow-[0_0_18px_rgba(37,99,235,0.08)] hover:bg-slate-50 shadow-sm'
+                            }`}
+                        >
+                          <option value="newest">Newest First</option>
+                          <option value="oldest">Oldest First</option>
+                          <option value="clicks">Most Clicks</option>
+                          <option value="name">Alphabetical</option>
+                        </select>
+                        <ChevronDown size={14} className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${isDark ? 'text-primary-400/80' : 'text-slate-550'}`} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1552,15 +1741,13 @@ const HomePage = () => {
                         <button
                           type="button"
                           onClick={handleSelectAll}
-                          className={`font-bold flex items-center gap-2 bg-transparent border-none cursor-pointer transition-colors ${
-                            isDark ? 'text-surface-450 hover:text-white' : 'text-surface-500 hover:text-surface-900'
-                          }`}
+                          className={`font-bold flex items-center gap-2 bg-transparent border-none cursor-pointer transition-colors ${isDark ? 'text-surface-450 hover:text-white' : 'text-surface-500 hover:text-surface-900'
+                            }`}
                         >
-                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
-                            filteredAndSortedDashboardUrls.every(u => selectedUrlIds.includes(u._id))
-                              ? 'bg-primary-500 border-primary-500 text-white'
-                              : isDark ? 'border-white/20 bg-surface-950/40' : 'border-slate-350 bg-white'
-                          }`}>
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${filteredAndSortedDashboardUrls.every(u => selectedUrlIds.includes(u._id))
+                            ? 'bg-primary-500 border-primary-500 text-white'
+                            : isDark ? 'border-white/20 bg-surface-950/40' : 'border-slate-350 bg-white'
+                            }`}>
                             {filteredAndSortedDashboardUrls.every(u => selectedUrlIds.includes(u._id)) && <Check size={10} strokeWidth={3} />}
                           </div>
                           <span>Select All ({filteredAndSortedDashboardUrls.length})</span>
@@ -1596,13 +1783,12 @@ const HomePage = () => {
                             onClick={(e) => handleCardClick(url, e)}
                             onTouchStart={() => handleTouchStart(url._id)}
                             onTouchEnd={handleTouchEnd}
-                            className={`p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-305 ${
-                              isSelected
-                                ? isDark 
-                                  ? 'bg-primary-500/10 border-primary-500 shadow-[0_8px_24px_rgba(37,99,235,0.18)]' 
-                                  : 'bg-primary-50 border-primary-400 shadow-[0_8px_24px_rgba(37,99,235,0.08)]'
-                                : 'theme-card'
-                            }`}
+                            className={`p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-305 ${isSelected
+                              ? isDark
+                                ? 'bg-primary-500/10 border-primary-500 shadow-[0_8px_24px_rgba(37,99,235,0.18)]'
+                                : 'bg-primary-50 border-primary-400 shadow-[0_8px_24px_rgba(37,99,235,0.08)]'
+                              : 'theme-card'
+                              }`}
                           >
                             {/* Left: Checkbox, Icon & URL Details */}
                             <div className="flex items-start gap-4 min-w-0 flex-1">
@@ -1614,24 +1800,22 @@ const HomePage = () => {
                                 }}
                                 className="flex items-center justify-center shrink-0 cursor-pointer self-center mt-1"
                               >
-                                <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
-                                  isSelected
-                                    ? 'bg-primary-500 border-primary-500 text-white'
-                                    : isDark 
-                                      ? 'border-white/20 hover:border-primary-500/50 bg-[#0b1329]/50' 
-                                      : 'border-slate-355 hover:border-primary-500/50 bg-white'
-                                }`}>
+                                <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${isSelected
+                                  ? 'bg-primary-500 border-primary-500 text-white'
+                                  : isDark
+                                    ? 'border-white/20 hover:border-primary-500/50 bg-[#0b1329]/50'
+                                    : 'border-slate-355 hover:border-primary-500/50 bg-white'
+                                  }`}>
                                   {isSelected && <Check size={12} strokeWidth={3} />}
                                 </div>
                               </div>
 
-                              <div className={`p-3 rounded-xl shrink-0 mt-0.5 ${
-                                !isUrlActive 
-                                  ? 'bg-amber-500/10 text-amber-500' 
-                                  : isExpired 
-                                    ? 'bg-red-500/10 text-red-500' 
-                                    : 'bg-primary-500/10 text-primary-500'
-                              }`}>
+                              <div className={`p-3 rounded-xl shrink-0 mt-0.5 ${!isUrlActive
+                                ? 'bg-amber-500/10 text-amber-500'
+                                : isExpired
+                                  ? 'bg-red-500/10 text-red-500'
+                                  : 'bg-primary-500/10 text-primary-500'
+                                }`}>
                                 <LinkIcon size={20} />
                               </div>
                               <div className="min-w-0 flex-1 space-y-1.5">
@@ -1640,11 +1824,10 @@ const HomePage = () => {
                                     href={`${API_BASE_URL}/${url.shortCode}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className={`font-bold text-base hover:text-primary-400 no-underline inline-flex items-center gap-1 ${
-                                      !isUrlActive 
-                                        ? 'text-amber-500/90' 
-                                        : 'text-primary-600'
-                                    }`}
+                                    className={`font-bold text-base hover:text-primary-400 no-underline inline-flex items-center gap-1 ${!isUrlActive
+                                      ? 'text-amber-500/90'
+                                      : 'text-primary-600'
+                                      }`}
                                   >
                                     neb.la/{url.shortCode}
                                     <ExternalLink size={12} className="opacity-75" />
@@ -1677,6 +1860,10 @@ const HomePage = () => {
                                 {/* Meta Details Row */}
                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] opacity-60">
                                   <span>Created: {new Date(url.createdAt).toLocaleDateString()}</span>
+                                  <span className="flex items-center gap-1 font-bold text-primary-500 dark:text-primary-400">
+                                    <TrendingUp size={10} />
+                                    {url.clicks} clicks
+                                  </span>
                                   {url.expiresAt && (
                                     <span className={isExpired ? 'text-red-555' : ''}>
                                       Expires: {new Date(url.expiresAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
@@ -1689,13 +1876,14 @@ const HomePage = () => {
                             {/* Right: Actions */}
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between md:justify-end gap-4 border-t md:border-none pt-4 md:pt-0 border-dashed border-surface-200 dark:border-surface-800 w-full md:w-auto">
                               {/* Actions bar */}
-                              <div className="grid grid-cols-4 sm:flex items-center gap-2 w-full sm:w-auto">
+                              {/* Desktop Actions bar */}
+                              <div className="hidden md:flex items-center gap-2">
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleCopy(url.shortCode, url._id); }}
                                   className={copiedId === url._id
                                     ? 'flex items-center justify-center w-full aspect-square sm:w-auto sm:aspect-auto p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer bg-green-600 text-white shadow-md'
                                     : 'theme-btn-action'
-                                    }
+                                  }
                                   title="Copy Link"
                                   type="button"
                                 >
@@ -1770,6 +1958,30 @@ const HomePage = () => {
                                   type="button"
                                 >
                                   <Trash2 size={14} />
+                                </button>
+                              </div>
+
+                              {/* Mobile Actions bar */}
+                              <div className="flex md:hidden items-center gap-2">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleCopy(url.shortCode, url._id); }}
+                                  className={copiedId === url._id
+                                    ? 'p-2.5 rounded-xl transition-all duration-305 border-none cursor-pointer bg-green-600 text-white shadow-md'
+                                    : 'theme-btn-action'
+                                  }
+                                  title="Copy Link"
+                                  type="button"
+                                >
+                                  {copiedId === url._id ? <Check size={12} /> : <Copy size={12} />}
+                                </button>
+
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setActiveMobileMenuUrl(url); }}
+                                  className="theme-btn-action"
+                                  title="Actions"
+                                  type="button"
+                                >
+                                  <MoreVertical size={14} />
                                 </button>
                               </div>
                             </div>
@@ -1927,15 +2139,14 @@ const HomePage = () => {
           {/* TAB 4: SETTINGS / PROFILE */}
           {activeTab === 'settings' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
+
                 {/* Profile Details Card */}
-                <div className={`p-8 rounded-[32px] border transition-all duration-300 shadow-2xl flex flex-col justify-between ${
-                  isDark 
-                    ? 'bg-surface-900/40 border-primary-500/10 hover:border-primary-500/20 text-white' 
-                    : 'bg-white border-surface-200 shadow-[0_15px_30px_rgba(0,0,0,0.02)]'
-                }`}>
+                <div className={`p-8 rounded-[32px] border transition-all duration-300 shadow-2xl flex flex-col justify-between ${isDark
+                  ? 'bg-surface-900/40 border-primary-500/10 hover:border-primary-500/20 text-white'
+                  : 'bg-white border-surface-200 shadow-[0_15px_30px_rgba(0,0,0,0.02)]'
+                  }`}>
                   <div>
                     <div className="flex items-center gap-3.5 mb-8">
                       <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-primary-500/20">
@@ -1973,11 +2184,10 @@ const HomePage = () => {
                           <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className={`text-xs px-3.5 py-2 rounded-xl border font-bold cursor-pointer transition-all ${
-                              isDark 
-                                ? 'bg-surface-800/80 border-surface-700 hover:bg-surface-700 text-white' 
-                                : 'bg-white border-surface-200 hover:bg-surface-50 text-surface-700 shadow-sm'
-                            }`}
+                            className={`text-xs px-3.5 py-2 rounded-xl border font-bold cursor-pointer transition-all ${isDark
+                              ? 'bg-surface-800/80 border-surface-700 hover:bg-surface-700 text-white'
+                              : 'bg-white border-surface-200 hover:bg-surface-50 text-surface-700 shadow-sm'
+                              }`}
                           >
                             Choose Image
                           </button>
@@ -1988,11 +2198,10 @@ const HomePage = () => {
                       {/* Display Name */}
                       <div className="space-y-2">
                         <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Display Name</label>
-                        <div className={`relative flex items-center rounded-2xl border transition-colors ${
-                          isDark 
-                            ? 'bg-[#120f26]/40 border-primary-500/20 focus-within:border-primary-500' 
-                            : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
-                        }`}>
+                        <div className={`relative flex items-center rounded-2xl border transition-colors ${isDark
+                          ? 'bg-[#120f26]/40 border-primary-500/20 focus-within:border-primary-500'
+                          : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                          }`}>
                           <User size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
                           <input
                             type="text"
@@ -2007,11 +2216,10 @@ const HomePage = () => {
                       {/* Email Address */}
                       <div className="space-y-2">
                         <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Email Address</label>
-                        <div className={`relative flex items-center rounded-2xl border opacity-70 ${
-                          isDark 
-                            ? 'bg-[#120f26]/20 border-surface-800' 
-                            : 'bg-surface-50 border-surface-150 shadow-inner'
-                        }`}>
+                        <div className={`relative flex items-center rounded-2xl border opacity-70 ${isDark
+                          ? 'bg-[#120f26]/20 border-surface-800'
+                          : 'bg-surface-50 border-surface-150 shadow-inner'
+                          }`}>
                           <Globe size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
                           <input
                             type="email"
@@ -2034,11 +2242,10 @@ const HomePage = () => {
                 </div>
 
                 {/* Password / Security Card */}
-                <div className={`p-8 rounded-[32px] border transition-all duration-300 shadow-2xl flex flex-col justify-between ${
-                  isDark 
-                    ? 'bg-surface-900/40 border-primary-500/10 hover:border-primary-500/20 text-white' 
-                    : 'bg-white border-surface-200 shadow-[0_15px_30px_rgba(0,0,0,0.02)]'
-                }`}>
+                <div className={`p-8 rounded-[32px] border transition-all duration-300 shadow-2xl flex flex-col justify-between ${isDark
+                  ? 'bg-surface-900/40 border-primary-500/10 hover:border-primary-500/20 text-white'
+                  : 'bg-white border-surface-200 shadow-[0_15px_30px_rgba(0,0,0,0.02)]'
+                  }`}>
                   <div>
                     <div className="flex items-center gap-3.5 mb-8">
                       <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-primary-500/20">
@@ -2053,12 +2260,23 @@ const HomePage = () => {
                     <form onSubmit={handleUpdatePassword} className="space-y-6">
                       {/* Current Password */}
                       <div className="space-y-2">
-                        <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Current Password</label>
-                        <div className={`relative flex items-center rounded-2xl border transition-colors ${
-                          isDark 
-                            ? 'bg-[#120f26]/40 border-primary-500/20 focus-within:border-primary-500' 
-                            : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
-                        }`}>
+                        <div className="flex items-center justify-between">
+                          <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Current Password</label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setForgotSettingsStep(1)
+                              setShowForgotSettingsModal(true)
+                            }}
+                            className="text-xs font-semibold text-primary-500 hover:text-primary-400 bg-transparent border-none cursor-pointer transition-colors"
+                          >
+                            Forgot password?
+                          </button>
+                        </div>
+                        <div className={`relative flex items-center rounded-2xl border transition-colors ${isDark
+                          ? 'bg-[#120f26]/40 border-primary-500/20 focus-within:border-primary-500'
+                          : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                          }`}>
                           <User size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
                           <input
                             type="password"
@@ -2074,11 +2292,10 @@ const HomePage = () => {
                       {/* New Password */}
                       <div className="space-y-2">
                         <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>New Password</label>
-                        <div className={`relative flex items-center rounded-2xl border transition-colors ${
-                          isDark 
-                            ? 'bg-[#120f26]/40 border-primary-500/20 focus-within:border-primary-500' 
-                            : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
-                        }`}>
+                        <div className={`relative flex items-center rounded-2xl border transition-colors ${isDark
+                          ? 'bg-[#120f26]/40 border-primary-500/20 focus-within:border-primary-500'
+                          : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                          }`}>
                           <User size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
                           <input
                             type="password"
@@ -2094,11 +2311,10 @@ const HomePage = () => {
                       {/* Confirm New Password */}
                       <div className="space-y-2">
                         <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Confirm New Password</label>
-                        <div className={`relative flex items-center rounded-2xl border transition-colors ${
-                          isDark 
-                            ? 'bg-[#120f26]/40 border-primary-500/20 focus-within:border-primary-500' 
-                            : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
-                        }`}>
+                        <div className={`relative flex items-center rounded-2xl border transition-colors ${isDark
+                          ? 'bg-[#120f26]/40 border-primary-500/20 focus-within:border-primary-500'
+                          : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                          }`}>
                           <User size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
                           <input
                             type="password"
@@ -2122,36 +2338,54 @@ const HomePage = () => {
                   </div>
                 </div>
 
-              </div>
-
-              {/* Design Credits Footer */}
-              <div className={`p-6 rounded-[24px] border flex items-center justify-between transition-all duration-300 ${
-                isDark 
-                  ? 'bg-surface-900/20 border-primary-500/5 hover:border-primary-500/10' 
-                  : 'bg-white border-surface-200 shadow-sm'
-              }`}>
-                <div>
-                  <h4 className="font-bold text-sm">Design & Developer Credits</h4>
-                  <p className={`text-xs ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>Beautifully crafted with custom glassmorphism styles and high-performance routing.</p>
+                {/* Danger Zone Card */}
+                <div className={`p-8 rounded-[32px] border border-red-500/20 transition-all duration-300 shadow-2xl flex flex-col justify-between bg-red-500/5 hover:border-red-500/30`}>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                    <div className="space-y-1.5">
+                      <h3 className="text-xl font-bold tracking-tight text-red-500 font-sans">Delete Account</h3>
+                      <p className={`text-xs ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>Permanently close and scrub your account metadata</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteConfirmText('')
+                        setShowDeleteModal(true)
+                      }}
+                      className="px-6 py-3 rounded-2xl bg-red-650 hover:bg-red-500 text-white text-xs font-bold transition-all border-none cursor-pointer shadow-lg shadow-red-500/10"
+                    >
+                      Delete Account
+                    </button>
+                  </div>
                 </div>
-                <a
-                  href="https://rithik186.netlify.app/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs font-bold text-primary-500 hover:underline no-underline"
-                >
-                  By Rithik
-                </a>
+
+                {/* Design Credits Footer */}
+                <div className={`p-6 rounded-[24px] border flex items-center justify-between transition-all duration-300 ${isDark
+                  ? 'bg-surface-900/20 border-primary-500/5 hover:border-primary-500/10'
+                  : 'bg-white border-surface-200 shadow-sm'
+                  }`}>
+                  <div>
+                    <h4 className="font-bold text-sm">Design & Developer Credits</h4>
+                    <p className={`text-xs ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>Beautifully crafted with custom glassmorphism styles and high-performance routing.</p>
+                  </div>
+                  <a
+                    href="https://rithik186.netlify.app/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-bold text-primary-500 hover:underline no-underline"
+                  >
+                    By Rithik
+                  </a>
+                </div>
               </div>
             </div>
           )}
 
-        </main>
+            </main>
 
         {/* Sticky Desktop Dock Navigation Bar (Separate space, no overlap) */}
-        <div className="hidden md:flex justify-center items-center w-full py-5 mt-auto border-t md:border-t-0 backdrop-blur-none bg-white/80 dark:bg-transparent border-slate-200/60 dark:border-transparent z-40 sticky bottom-0">
-          <Dock items={dockItems} />
-        </div>
+          <div className="hidden md:flex justify-center items-center w-full py-5 mt-auto border-t md:border-t-0 backdrop-blur-none bg-white/80 dark:bg-transparent border-slate-200/60 dark:border-transparent z-40 sticky bottom-0">
+            <Dock items={dockItems} />
+          </div>
       </div>
 
 
@@ -2396,7 +2630,7 @@ const HomePage = () => {
               <Layers className="text-primary-500" size={20} />
               Bulk URL Shortener
             </h3>
-            
+
             <p className={`text-xs mb-5 ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
               Shorten multiple links at once. Choose to upload a CSV file or paste original links directly.
             </p>
@@ -2413,9 +2647,8 @@ const HomePage = () => {
                   placeholder="https://example1.com&#10;https://example2.com&#10;example3.org"
                   disabled={isCsvShortening}
                   rows={4}
-                  className={`w-full rounded-xl border p-3 text-xs outline-none focus:border-primary-500 transition-colors ${
-                    isDark ? 'bg-surface-950 border-surface-700 text-white' : 'bg-surface-50 border-surface-300 text-surface-900'
-                  }`}
+                  className={`w-full rounded-xl border p-3 text-xs outline-none focus:border-primary-500 transition-colors ${isDark ? 'bg-surface-950 border-surface-700 text-white' : 'bg-surface-50 border-surface-300 text-surface-900'
+                    }`}
                 />
                 <button
                   type="button"
@@ -2446,9 +2679,8 @@ const HomePage = () => {
 
                 <div className="flex items-center gap-3">
                   {csvFile ? (
-                    <div className={`flex items-center justify-between flex-1 p-3 rounded-xl border text-xs ${
-                      isDark ? 'bg-surface-950 border-surface-700 font-sans' : 'bg-surface-50 border-surface-200 font-sans'
-                    }`}>
+                    <div className={`flex items-center justify-between flex-1 p-3 rounded-xl border text-xs ${isDark ? 'bg-surface-950 border-surface-700 font-sans' : 'bg-surface-50 border-surface-200 font-sans'
+                      }`}>
                       <span className="truncate max-w-[200px] font-medium">{csvFile.name}</span>
                       <div className="flex items-center gap-2">
                         <button
@@ -2464,18 +2696,16 @@ const HomePage = () => {
                           type="button"
                           onClick={() => setCsvFile(null)}
                           disabled={isCsvShortening}
-                          className={`p-1.5 rounded-lg border cursor-pointer transition-all ${
-                            isDark ? 'bg-surface-800 border-surface-700 hover:bg-surface-750 text-surface-400 hover:text-white' : 'bg-white border-surface-200 hover:bg-surface-50 text-surface-600 hover:text-surface-900'
-                          }`}
+                          className={`p-1.5 rounded-lg border cursor-pointer transition-all ${isDark ? 'bg-surface-800 border-surface-700 hover:bg-surface-750 text-surface-400 hover:text-white' : 'bg-white border-surface-200 hover:bg-surface-50 text-surface-600 hover:text-surface-900'
+                            }`}
                         >
                           <X size={12} />
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <label className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer hover:border-primary-500/50 transition-colors ${
-                      isDark ? 'border-surface-750 bg-surface-950/30' : 'border-surface-200 bg-surface-50/50'
-                    }`}>
+                    <label className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer hover:border-primary-500/50 transition-colors ${isDark ? 'border-surface-750 bg-surface-950/30' : 'border-surface-200 bg-surface-50/50'
+                      }`}>
                       <Upload size={24} className="text-primary-500 mb-2 animate-bounce" style={{ animationDuration: '2.5s' }} />
                       <span className="text-xs font-semibold">Select CSV file</span>
                       <input
@@ -2491,9 +2721,8 @@ const HomePage = () => {
 
               {/* Progress UI */}
               {csvShorteningProgress && (
-                <div className={`p-4 rounded-xl border text-xs space-y-3 ${
-                  isDark ? 'bg-[#0f0a24]/50 border-primary-500/20' : 'bg-violet-50/30 border-violet-100'
-                }`}>
+                <div className={`p-4 rounded-xl border text-xs space-y-3 ${isDark ? 'bg-[#0f0a24]/50 border-primary-500/20' : 'bg-violet-50/30 border-violet-100'
+                  }`}>
                   <div className="flex justify-between font-bold text-[11px]">
                     <span>Progress: {csvShorteningProgress.current} / {csvShorteningProgress.total}</span>
                     <span className="text-primary-500">Successes: {csvShorteningProgress.successes} • Failures: {csvShorteningProgress.failures}</span>
@@ -2511,11 +2740,11 @@ const HomePage = () => {
         </div>
       )}
 
-      {/* "How to Use" Interactive GSAP Modal */}
+      {/* "How to Use" Interactive GSAP Modal (Desktop only) */}
       {showHowToUse && (
         <div
           ref={stepsContainerRef}
-          className={`fixed inset-0 z-50 overflow-y-auto scroll-smooth flex justify-center backdrop-blur-xl transition-colors duration-300 ${isDark ? 'bg-surface-950/85' : 'bg-surface-50/85'
+          className={`fixed inset-0 z-50 overflow-y-auto scroll-smooth justify-center backdrop-blur-xl transition-colors duration-300 hidden md:flex ${isDark ? 'bg-surface-950/85' : 'bg-surface-50/85'
             }`}
         >
           {/* Scroll Track: tall height container to enable natural scrolling inside the fixed/sticky modal */}
@@ -2674,14 +2903,14 @@ const HomePage = () => {
 
                 {/* Horizontal Progress Track */}
                 <div className="w-full flex items-center gap-4">
-                  <span className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>0%</span>
+                  <span className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-650'}`}>0%</span>
                   <div className={`flex-1 h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-black/10'}`}>
                     <div
                       className="h-full bg-gradient-to-r from-primary-600 to-primary-400 transition-all duration-75"
                       style={{ width: `${scrollProgress}%` }}
                     />
                   </div>
-                  <span className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>100%</span>
+                  <span className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-655'}`}>100%</span>
                 </div>
 
                 {/* Scroll Guidance */}
@@ -2711,6 +2940,526 @@ const HomePage = () => {
         </div>
       )}
 
+      {/* Mobile-only Modal (Simple swipeable/clickable slider without GSAP) */}
+      {showHowToUse && (
+        <div className="fixed inset-0 z-50 flex flex-col md:hidden backdrop-blur-xl transition-colors duration-300 bg-surface-50/95 dark:bg-surface-950/95">
+          {/* Header */}
+          <div className="w-full flex justify-between items-center p-6 shrink-0 border-b border-surface-200/50 dark:border-surface-800/50">
+            <div className="flex items-center gap-2">
+              <HelpCircle size={20} className="text-primary-500" />
+              <span className={`font-extrabold text-lg tracking-tight font-sans ${isDark ? 'text-white' : 'text-surface-900'}`}>
+                Nebula Guide
+              </span>
+            </div>
+            <button
+              onClick={() => setShowHowToUse(false)}
+              className={`p-2 rounded-full border cursor-pointer transition-all ${isDark
+                ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white'
+                : 'bg-black/5 border-black/10 hover:bg-black/10 text-slate-800'
+                }`}
+              type="button"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Stepper Card Body (Supports swiping and touch inputs) */}
+          <div
+            className="flex-1 w-full flex items-center justify-center p-6 select-none"
+            onTouchStart={handleGuideTouchStart}
+            onTouchMove={handleGuideTouchMove}
+            onTouchEnd={handleGuideTouchEnd}
+          >
+            {/* Step card container */}
+            <div className={`w-full max-w-sm p-8 rounded-3xl border flex flex-col items-center text-center gap-6 shadow-xl transition-all duration-300 animate-in fade-in zoom-in-95 duration-200 ${isDark
+              ? 'bg-surface-900 border-surface-800 text-white shadow-black/40'
+              : 'bg-white border-slate-150 text-surface-900 shadow-slate-200/50'
+              }`}>
+              {/* Step indicator tag */}
+              <span className="text-[10px] tracking-widest uppercase font-black text-primary-500">
+                Step {mobileStep + 1} of 6
+              </span>
+
+              {/* Dynamic Icon */}
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-600 to-primary-400 text-white flex items-center justify-center shadow-lg shadow-primary-500/20">
+                {mobileStep === 0 && <LinkIcon size={28} />}
+                {mobileStep === 1 && <Pencil size={28} />}
+                {mobileStep === 2 && <Calendar size={28} />}
+                {mobileStep === 3 && <Sparkles size={28} />}
+                {mobileStep === 4 && <QrCode size={28} />}
+                {mobileStep === 5 && <Settings size={28} />}
+              </div>
+
+              {/* Step content details */}
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold font-sans">
+                  {mobileStep === 0 && "Destination URL"}
+                  {mobileStep === 1 && "Custom Alias"}
+                  {mobileStep === 2 && "Expiry Schedule"}
+                  {mobileStep === 3 && "Mint Shortlink"}
+                  {mobileStep === 4 && "Share & QR Code"}
+                  {mobileStep === 5 && "Lifecycle Control"}
+                </h3>
+                <p className={`text-xs leading-relaxed font-medium ${isDark ? 'text-surface-300' : 'text-surface-600'}`}>
+                  {mobileStep === 0 && "Paste your long, complex destination web address into the main URL shortener input box to begin conversion."}
+                  {mobileStep === 1 && "Give your link a memorable name that aligns with your brand. Replacing random characters with custom slugs boosts CTR by up to 34%."}
+                  {mobileStep === 2 && "Schedule precise expiration dates for temporary campaigns or marketing assets. Once expired, the link automatically deactivates."}
+                  {mobileStep === 3 && "Hit shorten to instantly mint your new shortcode on Nebula. Our high-frequency router processes URLs in under 10ms."}
+                  {mobileStep === 4 && "Share directly to WhatsApp or system channels. Instantly generate and download customizable, high-resolution vector QR codes."}
+                  {mobileStep === 5 && "Track live visitors with detailed analytics, update target destinations dynamically, or delete links permanently."}
+                </p>
+              </div>
+
+              {/* Swipe Guidance visual cue */}
+              <div className="text-[10px] opacity-40 font-semibold tracking-wider uppercase">
+                ← Swipe to navigate →
+              </div>
+            </div>
+          </div>
+
+          {/* Stepper Footer Controls */}
+          <div className="p-6 shrink-0 flex flex-col gap-4 border-t border-surface-200/50 dark:border-surface-800/50 bg-white/40 dark:bg-black/20">
+            {/* Dots indicator track */}
+            <div className="flex justify-center items-center gap-1.5">
+              {[0, 1, 2, 3, 4, 5].map((idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setMobileStep(idx)}
+                  className={`w-2 h-2 rounded-full border-none cursor-pointer transition-all duration-300 ${mobileStep === idx
+                    ? 'w-5 bg-primary-500'
+                    : isDark ? 'bg-surface-700 hover:bg-surface-650' : 'bg-slate-200 hover:bg-slate-300'
+                    }`}
+                  type="button"
+                />
+              ))}
+            </div>
+
+            {/* Back & Next/Done buttons */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setMobileStep(prev => Math.max(0, prev - 1))}
+                disabled={mobileStep === 0}
+                className={`flex-1 py-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${mobileStep === 0
+                  ? 'opacity-40 cursor-not-allowed bg-transparent border-slate-250 text-slate-400 dark:border-surface-800 dark:text-surface-600'
+                  : isDark
+                    ? 'bg-surface-800 border-surface-700 hover:bg-surface-750 text-white'
+                    : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm'
+                  }`}
+                type="button"
+              >
+                Back
+              </button>
+
+              {mobileStep < 5 ? (
+                <button
+                  onClick={() => setMobileStep(prev => Math.min(5, prev + 1))}
+                  className="flex-1 py-3 rounded-xl bg-primary-600 hover:bg-primary-500 text-white font-bold text-xs border-none cursor-pointer transition-all shadow-md shadow-primary-500/10 flex items-center justify-center gap-1"
+                  type="button"
+                >
+                  Next
+                  <ArrowRight size={14} />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowHowToUse(false)}
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-primary-400 hover:opacity-90 active:scale-95 text-white font-black text-xs border-none cursor-pointer transition-all shadow-lg shadow-primary-500/20"
+                  type="button"
+                >
+                  Got It, Let's Start
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Actions Drawer Bottom Sheet */}
+      {activeMobileMenuUrl && (
+        <div className="fixed inset-0 z-50 md:hidden flex flex-col justify-end animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <div
+            onClick={() => setActiveMobileMenuUrl(null)}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          />
+
+          {/* Drawer content */}
+          <div className={`relative z-10 w-full rounded-t-[32px] p-6 max-h-[85vh] overflow-y-auto flex flex-col gap-5 shadow-2xl border-t transition-transform duration-300 ease-out animate-in slide-in-from-bottom duration-300 ${isDark
+            ? 'bg-surface-900 border-surface-800 text-white'
+            : 'bg-white border-slate-100 text-surface-900'
+            }`}>
+            {/* Header handle */}
+            <div className="w-12 h-1.5 bg-slate-300 dark:bg-surface-700 rounded-full mx-auto shrink-0" />
+
+            {/* Link Info */}
+            <div className="space-y-1 text-center shrink-0">
+              <span className="text-[10px] tracking-widest uppercase font-black text-primary-500">
+                Link Actions
+              </span>
+              <h3 className="text-lg font-extrabold font-sans truncate px-4">
+                neb.la/{activeMobileMenuUrl.shortCode}
+              </h3>
+              <p className={`text-xs truncate max-w-xs mx-auto opacity-70 ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
+                {activeMobileMenuUrl.originalUrl}
+              </p>
+
+              {/* Info chips */}
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${activeMobileMenuUrl.isActive === false
+                  ? 'bg-amber-500/10 text-amber-500'
+                  : (activeMobileMenuUrl.expiresAt && new Date(activeMobileMenuUrl.expiresAt) < currentTime)
+                    ? 'bg-red-500/10 text-red-500'
+                    : 'bg-green-500/10 text-green-500'
+                  }`}>
+                  {activeMobileMenuUrl.isActive === false
+                    ? 'Disabled'
+                    : (activeMobileMenuUrl.expiresAt && new Date(activeMobileMenuUrl.expiresAt) < currentTime)
+                      ? 'Expired'
+                      : 'Active'}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary-500/10 text-primary-500">
+                  {activeMobileMenuUrl.clicks} clicks
+                </span>
+              </div>
+            </div>
+
+            {/* Actions Grid / List */}
+            <div className="flex flex-col gap-1.5">
+              {/* Copy Link */}
+              <button
+                onClick={() => {
+                  handleCopy(activeMobileMenuUrl.shortCode, activeMobileMenuUrl._id);
+                  setActiveMobileMenuUrl(null);
+                }}
+                className={`w-full py-3.5 px-4 rounded-2xl border-none cursor-pointer text-left font-bold text-sm flex items-center gap-3 transition-colors ${isDark ? 'bg-surface-800 hover:bg-surface-750 text-white' : 'bg-slate-550/5 hover:bg-slate-100 text-slate-800'
+                  }`}
+                type="button"
+              >
+                <div className="p-1.5 rounded-lg bg-primary-500/10 text-primary-500">
+                  <Copy size={16} />
+                </div>
+                <span>Copy Shortlink</span>
+              </button>
+
+              {/* View QR Code */}
+              <button
+                onClick={() => {
+                  setSelectedQrUrl(activeMobileMenuUrl);
+                  setActiveMobileMenuUrl(null);
+                }}
+                className={`w-full py-3.5 px-4 rounded-2xl border-none cursor-pointer text-left font-bold text-sm flex items-center gap-3 transition-colors ${isDark ? 'bg-surface-800 hover:bg-surface-750 text-white' : 'bg-slate-550/5 hover:bg-slate-100 text-slate-800'
+                  }`}
+                type="button"
+              >
+                <div className="p-1.5 rounded-lg bg-primary-500/10 text-primary-500">
+                  <QrCode size={16} />
+                </div>
+                <span>View QR Code</span>
+              </button>
+
+              {/* WhatsApp Share */}
+              <button
+                onClick={() => {
+                  handleWhatsAppShare(`${API_BASE_URL}/${activeMobileMenuUrl.shortCode}`);
+                  setActiveMobileMenuUrl(null);
+                }}
+                className={`w-full py-3.5 px-4 rounded-2xl border-none cursor-pointer text-left font-bold text-sm flex items-center gap-3 transition-colors ${isDark ? 'bg-surface-800 hover:bg-surface-750 text-white' : 'bg-slate-550/5 hover:bg-slate-100 text-slate-800'
+                  }`}
+                type="button"
+              >
+                <div className="p-1.5 rounded-lg bg-green-500/10 text-green-500">
+                  <WhatsAppIcon size={16} />
+                </div>
+                <span>Share via WhatsApp</span>
+              </button>
+
+              {/* Share Menu */}
+              <button
+                onClick={() => {
+                  handleSystemShare(`${API_BASE_URL}/${activeMobileMenuUrl.shortCode}`);
+                  setActiveMobileMenuUrl(null);
+                }}
+                className={`w-full py-3.5 px-4 rounded-2xl border-none cursor-pointer text-left font-bold text-sm flex items-center gap-3 transition-colors ${isDark ? 'bg-surface-800 hover:bg-surface-750 text-white' : 'bg-slate-550/5 hover:bg-slate-100 text-slate-800'
+                  }`}
+                type="button"
+              >
+                <div className="p-1.5 rounded-lg bg-primary-500/10 text-primary-500">
+                  <Share2 size={16} />
+                </div>
+                <span>Share Shortlink</span>
+              </button>
+
+              {/* View Analytics */}
+              <button
+                onClick={() => {
+                  setSelectedUrlForAnalytics(activeMobileMenuUrl);
+                  setActiveTab('analytics');
+                  setActiveMobileMenuUrl(null);
+                }}
+                className={`w-full py-3.5 px-4 rounded-2xl border-none cursor-pointer text-left font-bold text-sm flex items-center gap-3 transition-colors ${isDark ? 'bg-surface-800 hover:bg-surface-750 text-white' : 'bg-slate-550/5 hover:bg-slate-100 text-slate-800'
+                  }`}
+                type="button"
+              >
+                <div className="p-1.5 rounded-lg bg-primary-500/10 text-primary-500">
+                  <BarChart3 size={16} />
+                </div>
+                <span>View Live Analytics</span>
+              </button>
+
+              {/* Toggle Enable/Disable */}
+              <button
+                onClick={() => {
+                  handleToggleActive(activeMobileMenuUrl);
+                  setActiveMobileMenuUrl(null);
+                }}
+                className={`w-full py-3.5 px-4 rounded-2xl border-none cursor-pointer text-left font-bold text-sm flex items-center gap-3 transition-colors ${isDark ? 'bg-surface-800 hover:bg-surface-750 text-white' : 'bg-slate-550/5 hover:bg-slate-100 text-slate-800'
+                  }`}
+                type="button"
+              >
+                <div className={`p-1.5 rounded-lg ${activeMobileMenuUrl.isActive === false
+                  ? 'bg-green-500/10 text-green-500'
+                  : 'bg-amber-500/10 text-amber-500'
+                  }`}>
+                  {activeMobileMenuUrl.isActive === false ? <Eye size={16} /> : <EyeOff size={16} />}
+                </div>
+                <span>{activeMobileMenuUrl.isActive === false ? 'Enable Link' : 'Disable Link'}</span>
+              </button>
+
+              {/* Edit Details */}
+              <button
+                onClick={() => {
+                  handleEditClick(activeMobileMenuUrl);
+                  setActiveMobileMenuUrl(null);
+                }}
+                className={`w-full py-3.5 px-4 rounded-2xl border-none cursor-pointer text-left font-bold text-sm flex items-center gap-3 transition-colors ${isDark ? 'bg-surface-800 hover:bg-surface-750 text-white' : 'bg-[#1e1b4b]/20 hover:bg-[#1e1b4b]/30 text-indigo-400'
+                  }`}
+                type="button"
+              >
+                <div className="p-1.5 rounded-lg bg-primary-500/10 text-primary-500">
+                  <Pencil size={16} />
+                </div>
+                <span>Edit Link Settings</span>
+              </button>
+
+              {/* Delete Link */}
+              <button
+                onClick={() => {
+                  handleDelete(activeMobileMenuUrl._id);
+                  setActiveMobileMenuUrl(null);
+                }}
+                className="w-full py-3.5 px-4 rounded-2xl border-none cursor-pointer text-left font-bold text-sm flex items-center gap-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors"
+                type="button"
+              >
+                <div className="p-1.5 rounded-lg bg-red-500/20 text-red-500">
+                  <Trash2 size={16} />
+                </div>
+                <span>Delete Link Permanently</span>
+              </button>
+            </div>
+
+            {/* Cancel Button */}
+            <button
+              onClick={() => setActiveMobileMenuUrl(null)}
+              className={`w-full py-3 rounded-2xl font-bold text-xs border transition-all cursor-pointer text-center ${isDark
+                ? 'bg-surface-800 border-surface-700 hover:bg-surface-750 text-white'
+                : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm'
+                }`}
+              type="button"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            onClick={() => setShowDeleteModal(false)}
+            className="absolute inset-0 bg-black/75 backdrop-blur-md animate-in fade-in"
+          />
+          <div className={`relative z-10 w-full max-w-md p-8 rounded-3xl border shadow-2xl flex flex-col gap-6 animate-in zoom-in-95 duration-200 ${isDark ? 'glass-card border-red-500/20 text-white animate-pulse-slow' : 'bg-white border-slate-100 text-surface-900'
+            }`}>
+            <div className="flex justify-between items-start border-b border-red-500/20 pb-3">
+              <div>
+                <h3 className="text-xl font-bold font-sans text-red-500">Delete Account</h3>
+                <p className={`text-xs mt-1 ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
+                  This action is irreversible and permanent.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                className={`p-1.5 rounded-full border cursor-pointer transition-all ${isDark ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-black/5 border-black/10 hover:bg-black/10 text-slate-800'
+                  }`}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p className={`text-sm ${isDark ? 'text-surface-300' : 'text-surface-600'}`}>
+              All your shortened links, dynamic QR codes, and click history analytics will be deleted forever.
+            </p>
+
+            <form onSubmit={handleDeleteAccountSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-widest text-red-500">
+                  Type "delete my account" to confirm:
+                </label>
+                <div className={`relative flex items-center rounded-2xl border transition-colors ${isDark ? 'bg-surface-950/60 border-red-500/20 focus-within:border-red-500' : 'bg-surface-50 border-surface-200 focus-within:border-red-500 shadow-inner'
+                  }`}>
+                  <input
+                    type="text"
+                    required
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    placeholder="delete my account"
+                    className={`w-full bg-transparent border-none outline-none py-3 px-4 text-sm ${isDark ? 'text-white' : 'text-surface-900'}`}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  className={`flex-1 py-3 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${isDark ? 'bg-surface-800 border-surface-700 hover:bg-surface-750 text-white' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700 shadow-sm'
+                    }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isDeletingAccount}
+                  className="flex-1 bg-red-650 hover:bg-red-500 text-white font-bold py-3 rounded-xl border-none cursor-pointer transition-all shadow-md shadow-red-500/10"
+                >
+                  {isDeletingAccount ? <Loader2 size={14} className="animate-spin" /> : 'Delete Account'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Forgot Password Modal (Settings Tab) */}
+      {showForgotSettingsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            onClick={() => setShowForgotSettingsModal(false)}
+            className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity duration-350 animate-in fade-in"
+          />
+          <div className={`relative z-10 w-full max-w-md p-8 rounded-3xl border shadow-2xl flex flex-col gap-6 animate-in zoom-in-95 duration-250 ${isDark ? 'glass-card border-primary-500/20 text-white animate-pulse-slow' : 'bg-white border-slate-100 text-surface-900'
+            }`}>
+            <div className="flex justify-between items-start border-b border-surface-200 dark:border-surface-850/50 pb-3">
+              <div>
+                <h3 className="text-xl font-bold font-sans">
+                  {forgotSettingsStep === 1 && 'Reset Password'}
+                  {forgotSettingsStep === 2 && 'Set New Password'}
+                  {forgotSettingsStep === 3 && 'Check Your Inbox'}
+                </h3>
+                <p className={`text-xs mt-1 ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
+                  {forgotSettingsStep === 1 && 'Request recovery link for your account'}
+                  {forgotSettingsStep === 2 && 'Choose a strong new password'}
+                  {forgotSettingsStep === 3 && 'We sent instructions to your email'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowForgotSettingsModal(false)}
+                className={`p-1.5 rounded-full border cursor-pointer transition-all ${isDark ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-black/5 border-black/10 hover:bg-black/10 text-slate-800'
+                  }`}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {forgotSettingsStep === 1 && (
+              <form onSubmit={handleForgotSettingsSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Email Address</label>
+                  <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-[#120f26]/40 border-primary-500/20 focus-within:border-primary-500' : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                    }`}>
+                    <Mail size={16} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                    <input
+                      type="email"
+                      required
+                      value={forgotSettingsEmail}
+                      onChange={(e) => setForgotSettingsEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className={`w-full bg-transparent border-none outline-none py-3 pl-11 pr-4 text-sm ${isDark ? 'text-white' : 'text-surface-900'}`}
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSendingForgotSettings}
+                  className="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 border-none cursor-pointer shadow-lg shadow-primary-500/25 transition-all disabled:opacity-70"
+                >
+                  {isSendingForgotSettings ? <Loader2 size={16} className="animate-spin" /> : 'Send Reset Link'}
+                </button>
+              </form>
+            )}
+
+            {forgotSettingsStep === 2 && (
+              <form onSubmit={handleResetSettingsSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>New Password</label>
+                  <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-[#120f26]/40 border-primary-500/20 focus-within:border-primary-500' : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                    }`}>
+                    <Lock size={16} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                    <input
+                      type="password"
+                      required
+                      placeholder="At least 6 characters"
+                      value={newSettingsPassword}
+                      onChange={(e) => setNewSettingsPassword(e.target.value)}
+                      className={`w-full bg-transparent border-none outline-none py-3 pl-11 pr-4 text-sm ${isDark ? 'text-white' : 'text-surface-900'}`}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Confirm New Password</label>
+                  <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-[#120f26]/40 border-primary-500/20 focus-within:border-primary-500' : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                    }`}>
+                    <Lock size={16} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                    <input
+                      type="password"
+                      required
+                      placeholder="Confirm new password"
+                      value={confirmNewSettingsPassword}
+                      onChange={(e) => setConfirmNewSettingsPassword(e.target.value)}
+                      className={`w-full bg-transparent border-none outline-none py-3 pl-11 pr-4 text-sm ${isDark ? 'text-white' : 'text-surface-900'}`}
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={isResettingSettings}
+                  className="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 border-none cursor-pointer shadow-lg shadow-primary-500/25 transition-all disabled:opacity-70"
+                >
+                  {isResettingSettings ? <Loader2 size={16} className="animate-spin" /> : 'Update Password'}
+                </button>
+              </form>
+            )}
+
+            {forgotSettingsStep === 3 && (
+              <div className="text-center space-y-4 py-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto">
+                  <Mail size={24} />
+                </div>
+                <p className={`text-sm ${isDark ? 'text-surface-300' : 'text-surface-700'}`}>
+                  We sent a password reset email to <span className="font-bold text-primary-500">{forgotSettingsEmail}</span>. Please click the link to update your credentials.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotSettingsModal(false)}
+                  className="w-full mt-2 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-3 rounded-xl border-none cursor-pointer shadow-md"
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </motion.div>
   )
 }

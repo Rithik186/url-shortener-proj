@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Link2, Mail, Lock, ArrowRight, Loader2, ArrowLeft } from 'lucide-react'
+import { Link2, Mail, Lock, ArrowRight, Loader2, ArrowLeft, X } from 'lucide-react'
 import { useGoogleLogin } from '@react-oauth/google'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
@@ -14,6 +14,91 @@ const Login = () => {
   
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [isLoading, setIsLoading] = useState(false)
+
+  // Forgot Password Modal States
+  const [showForgotModal, setShowForgotModal] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [isSendingForgot, setIsSendingForgot] = useState(false)
+  const [forgotStep, setForgotStep] = useState(1) // 1: request, 2: reset (dev testing), 3: success (email sent check)
+  const [resetToken, setResetToken] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [isResetting, setIsResetting] = useState(false)
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault()
+    setIsSendingForgot(true)
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: forgotEmail }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        toast.error(data.message || 'Failed to send password reset email.')
+        return
+      }
+      
+      toast.success(data.message || 'Reset link processed.')
+      
+      // In local dev, backend sends resetToken back for convenience
+      if (data.resetToken) {
+        setResetToken(data.resetToken)
+        setForgotStep(2)
+      } else {
+        setForgotStep(3)
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error('Connection error connecting to API.')
+    } finally {
+      setIsSendingForgot(false)
+    }
+  }
+
+  const handleResetSubmit = async (e) => {
+    e.preventDefault()
+    if (newPassword !== confirmNewPassword) {
+      toast.error('Passwords do not match.')
+      return
+    }
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters.')
+      return
+    }
+    
+    setIsResetting(true)
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token: resetToken, password: newPassword }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        toast.error(data.message || 'Failed to reset password.')
+        return
+      }
+      
+      toast.success('Password reset successfully! You can now log in.')
+      setShowForgotModal(false)
+      setForgotStep(1)
+      setForgotEmail('')
+      setResetToken('')
+      setNewPassword('')
+      setConfirmNewPassword('')
+    } catch (err) {
+      console.error(err)
+      toast.error('Connection error resetting password.')
+    } finally {
+      setIsResetting(false)
+    }
+  }
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -125,9 +210,16 @@ const Login = () => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className={`block text-sm font-medium ${isDark ? 'text-surface-300' : 'text-surface-700'}`}>Password</label>
-              <Link to="/forgot-password" className="text-xs font-medium text-primary-500 hover:text-primary-400 transition-colors no-underline">
+              <button
+                type="button"
+                onClick={() => {
+                  setForgotStep(1)
+                  setShowForgotModal(true)
+                }}
+                className="text-xs font-semibold text-primary-500 hover:text-primary-400 transition-colors border-none bg-transparent cursor-pointer no-underline"
+              >
                 Forgot password?
-              </Link>
+              </button>
             </div>
             <div className={`relative flex items-center rounded-xl border transition-colors ${isDark ? 'bg-surface-950/60 border-primary-500/20 focus-within:border-primary-500' : 'bg-white border-surface-300 focus-within:border-primary-500'}`}>
               <Lock size={18} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
@@ -164,7 +256,7 @@ const Login = () => {
         </div>
 
         <button
-          onClick={() => handleGoogleLogin()}
+          onClick={() => toast.error('Google authentication is currently not available. Coming soon!')}
           type="button"
           className={`w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border transition-all cursor-pointer font-medium text-sm ${
             isDark 
@@ -189,6 +281,133 @@ const Login = () => {
           </Link>
         </p>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            onClick={() => setShowForgotModal(false)}
+            className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity duration-350 animate-in fade-in"
+          />
+          <div className={`relative z-10 w-full max-w-md p-8 rounded-3xl border shadow-2xl flex flex-col gap-6 animate-in zoom-in-95 duration-250 ${
+            isDark ? 'glass-card border-primary-500/20 text-white animate-pulse-slow' : 'bg-white border-slate-100 text-surface-900'
+          }`}>
+            <div className="flex justify-between items-start border-b border-surface-200 dark:border-surface-850/50 pb-3">
+              <div>
+                <h3 className="text-xl font-bold font-sans">
+                  {forgotStep === 1 && 'Reset Password'}
+                  {forgotStep === 2 && 'Set New Password'}
+                  {forgotStep === 3 && 'Check Your Inbox'}
+                </h3>
+                <p className={`text-xs mt-1 ${isDark ? 'text-surface-400' : 'text-surface-500'}`}>
+                  {forgotStep === 1 && 'Enter your email to request a reset link'}
+                  {forgotStep === 2 && 'Choose a strong new password for your account'}
+                  {forgotStep === 3 && 'We sent recovery instructions to your email'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className={`p-1.5 rounded-full border cursor-pointer transition-all ${
+                  isDark ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-black/5 border-black/10 hover:bg-black/10 text-slate-800'
+                }`}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {forgotStep === 1 && (
+              <form onSubmit={handleForgotSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Email Address</label>
+                  <div className={`relative flex items-center rounded-xl border transition-colors ${
+                    isDark ? 'bg-surface-950/60 border-primary-500/20 focus-within:border-primary-500' : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                  }`}>
+                    <Mail size={16} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                    <input
+                      type="email"
+                      required
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className={`w-full bg-transparent border-none outline-none py-3 pl-11 pr-4 text-sm ${isDark ? 'text-white' : 'text-surface-900'}`}
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSendingForgot}
+                  className="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 border-none cursor-pointer shadow-lg shadow-primary-500/25 transition-all disabled:opacity-70"
+                >
+                  {isSendingForgot ? <Loader2 size={16} className="animate-spin" /> : 'Send Reset Link'}
+                </button>
+              </form>
+            )}
+
+            {forgotStep === 2 && (
+              <form onSubmit={handleResetSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>New Password</label>
+                  <div className={`relative flex items-center rounded-xl border transition-colors ${
+                    isDark ? 'bg-surface-950/60 border-primary-500/20 focus-within:border-primary-500' : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                  }`}>
+                    <Lock size={16} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                    <input
+                      type="password"
+                      required
+                      placeholder="At least 6 characters"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className={`w-full bg-transparent border-none outline-none py-3 pl-11 pr-4 text-sm ${isDark ? 'text-white' : 'text-surface-900'}`}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Confirm New Password</label>
+                  <div className={`relative flex items-center rounded-xl border transition-colors ${
+                    isDark ? 'bg-surface-950/60 border-primary-500/20 focus-within:border-primary-500' : 'bg-surface-50 border-surface-200 focus-within:border-primary-500 shadow-inner'
+                  }`}>
+                    <Lock size={16} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
+                    <input
+                      type="password"
+                      required
+                      placeholder="Confirm new password"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      className={`w-full bg-transparent border-none outline-none py-3 pl-11 pr-4 text-sm ${isDark ? 'text-white' : 'text-surface-900'}`}
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={isResetting}
+                  className="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 border-none cursor-pointer shadow-lg shadow-primary-500/25 transition-all disabled:opacity-70"
+                >
+                  {isResetting ? <Loader2 size={16} className="animate-spin" /> : 'Update Password'}
+                </button>
+              </form>
+            )}
+
+            {forgotStep === 3 && (
+              <div className="text-center space-y-4 py-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto">
+                  <Mail size={24} />
+                </div>
+                <p className={`text-sm ${isDark ? 'text-surface-300' : 'text-surface-700'}`}>
+                  We sent a password reset email to <span className="font-bold text-primary-500">{forgotEmail}</span>. Please click the link in that email to reset your credentials.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(false)}
+                  className="w-full mt-2 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-3 rounded-xl border-none cursor-pointer shadow-md"
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

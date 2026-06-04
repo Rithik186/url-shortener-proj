@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Link2, Copy, Check, ExternalLink, Laptop, Clock, ArrowLeft, 
   ChevronRight, Calendar, Compass, ShieldAlert, ChevronDown,
-  Activity
+  Activity, X, TrendingUp, BarChart3, Maximize2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
@@ -13,7 +13,7 @@ import { API_BASE_URL } from '../config';
 // ----------------------------------------------------
 // Custom Interactive SVG Donut/Pie Chart
 // ----------------------------------------------------
-const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
+const DonutChart = ({ data, isDark, title = "Device Breakdown", zoomed = false }) => {
   const total = data.reduce((acc, d) => acc + d.value, 0);
   
   const firstNonZero = data.find(d => d.value > 0);
@@ -103,7 +103,7 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
         {/* Custom Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-bold outline-none cursor-pointer transition-all ${
               isDark 
                 ? 'bg-surface-850 border-surface-750/70 text-white hover:bg-surface-800' 
@@ -127,7 +127,8 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
                 return (
                   <button
                     key={item.label}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setActiveKey(item.label.toLowerCase());
                       setIsOpen(false);
                     }}
@@ -152,8 +153,8 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
       </div>
 
       {/* Pie Chart Canvas */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-8 py-4 w-full flex-1">
-        <div className="relative w-36 h-36 sm:w-44 sm:h-44 flex-shrink-0">
+      <div className={`flex ${zoomed ? 'flex-col md:flex-row' : 'flex-col sm:flex-row'} items-center justify-center gap-8 py-4 w-full flex-1`}>
+        <div className={`relative ${zoomed ? 'w-44 h-44 md:w-56 md:h-56' : 'w-36 h-36 sm:w-44 sm:h-44'} flex-shrink-0`}>
           <svg className="w-full h-full filter drop-shadow-[0_8px_24px_rgba(139,0,224,0.15)]" viewBox="0 0 100 100">
             {segments.map((seg, idx) => {
               if (seg.value === 0) return null;
@@ -194,17 +195,17 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
           
           {/* Centered label */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-2xl font-black font-sans tracking-tight">
+            <span className={`${zoomed ? 'text-3xl' : 'text-2xl'} font-black font-sans tracking-tight`}>
               {activeSegment ? activeSegment.value.toLocaleString() : '0'}
             </span>
-            <span className="text-[10px] uppercase tracking-widest opacity-60 font-bold">
+            <span className={`${zoomed ? 'text-xs' : 'text-[10px]'} uppercase tracking-widest opacity-60 font-bold`}>
               {activeSegment ? activeSegment.label : 'Visits'}
             </span>
           </div>
         </div>
 
         {/* Legend */}
-        <div className="flex flex-col gap-3 w-full sm:w-auto flex-1 justify-center">
+        <div className={`flex flex-col gap-3 w-full ${zoomed ? 'md:w-auto' : 'sm:w-auto'} flex-1 justify-center`}>
           {segments.map((item, idx) => {
             const percentage = total > 0 ? ((item.value / total) * 100).toFixed(0) : '0';
             const isActive = item.key === activeKey;
@@ -212,7 +213,11 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
             return (
               <div 
                 key={idx} 
-                className={`flex items-center justify-between gap-4 text-xs px-3.5 py-2.5 rounded-2xl cursor-pointer transition-all w-full ${
+                className={`flex items-center justify-between gap-4 w-full cursor-pointer transition-all ${
+                  zoomed 
+                    ? 'text-sm px-4 py-3 rounded-2xl'
+                    : 'text-xs px-3.5 py-2.5 rounded-2xl'
+                } ${
                   isActive 
                     ? isDark ? 'bg-surface-850 text-white font-bold shadow-md shadow-violet-500/5' : 'bg-surface-150 text-surface-900 font-bold shadow-sm'
                     : 'opacity-70 hover:opacity-100'
@@ -239,10 +244,10 @@ const DonutChart = ({ data, isDark, title = "Device Breakdown" }) => {
 // ----------------------------------------------------
 // Custom SVG Bar Chart (Contribution style)
 // ----------------------------------------------------
-const BarChart = ({ data, isDark }) => {
+const BarChart = ({ data, isDark, zoomed = false }) => {
   const maxVal = Math.max(...data.map(d => d.value), 1);
-  const height = 240;
-  const width = 500;
+  const height = zoomed ? 300 : 240;
+  const width = zoomed ? 600 : 500;
   const paddingX = 40;
   const paddingY = 30;
   
@@ -258,7 +263,7 @@ const BarChart = ({ data, isDark }) => {
   const chartHeight = height - paddingY * 2;
   
   const barCount = data.length;
-  const barGap = 18;
+  const barGap = zoomed ? 22 : 18;
   const totalGapsWidth = barGap * (barCount - 1);
   const barWidth = (chartWidth - totalGapsWidth) / barCount;
 
@@ -313,7 +318,7 @@ const BarChart = ({ data, isDark }) => {
                   y={y - 8}
                   textAnchor="middle"
                   fill={isDark ? 'rgba(255, 255, 255, 0.85)' : 'rgba(0, 0, 0, 0.75)'}
-                  className="text-[10px] font-extrabold font-[family-name:var(--font-sans)]"
+                  className={`${zoomed ? 'text-xs' : 'text-[10px]'} font-extrabold font-[family-name:var(--font-sans)]`}
                 >
                   {d.value}
                 </text>
@@ -323,13 +328,13 @@ const BarChart = ({ data, isDark }) => {
         </svg>
       </div>
 
-      <div className="flex justify-between px-3 mt-3 text-[10px] opacity-75 font-bold tracking-wider uppercase">
+      <div className={`flex justify-between px-3 mt-3 opacity-75 font-bold tracking-wider uppercase ${zoomed ? 'text-xs' : 'text-[10px]'}`}>
         {data.map((d, i) => {
           const parts = d.label.split(',')
           return (
-            <span key={i} className="flex flex-col items-center text-center w-14">
+            <span key={i} className={`flex flex-col items-center text-center ${zoomed ? 'w-20' : 'w-14'}`}>
               <span>{parts[0]}</span>
-              {parts[1] && <span className="text-[9px] opacity-60 font-semibold mt-0.5">{parts[1]}</span>}
+              {parts[1] && <span className={`${zoomed ? 'text-[10px]' : 'text-[9px]'} opacity-60 font-semibold mt-0.5`}>{parts[1]}</span>}
             </span>
           )
         })}
@@ -355,6 +360,8 @@ const AnalyticsDashboard = ({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedTimeRange, setSelectedTimeRange] = useState('7days');
   const [globalTimeRange, setGlobalTimeRange] = useState('7days');
+  const [activeMobileChartTab, setActiveMobileChartTab] = useState('history');
+  const [zoomedChart, setZoomedChart] = useState(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -457,6 +464,67 @@ const AnalyticsDashboard = ({
 
   const topPerformanceUrls = [...urls].sort((a, b) => b.clicks - a.clicks);
 
+  // Selected URL computations in outer scope for Zoom Modal accessibility
+  const uVisits = selectedUrl ? (selectedUrl.visits || []) : [];
+  const uBrowsers = {};
+  const uDevices = {};
+
+  uVisits.forEach(v => {
+    uBrowsers[v.browser || 'Unknown'] = (uBrowsers[v.browser || 'Unknown'] || 0) + 1;
+    uDevices[v.device || 'Desktop'] = (uDevices[v.device || 'Desktop'] || 0) + 1;
+  });
+
+  const uClicks7Days = last7Days.map(day => {
+    const count = uVisits.filter(v => {
+      const vDate = new Date(v.timestamp).toISOString().split('T')[0];
+      return vDate === day;
+    }).length;
+    const dateObj = new Date(day);
+    const dayName = dateObj.toLocaleDateString(undefined, { weekday: 'short' });
+    const dayNum = dateObj.getDate().toString().padStart(2, '0');
+    const monthNum = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    return {
+      label: `${dayName},${dayNum}/${monthNum}`,
+      value: count
+    };
+  });
+
+  const uClicksMonthly = last6Months.map(m => {
+    const count = uVisits.filter(v => {
+      const vDate = new Date(v.timestamp);
+      return vDate.getFullYear() === m.year && vDate.getMonth() === m.month;
+    }).length;
+    return {
+      label: `${m.label},'${m.yearLabel}`,
+      value: count
+    };
+  });
+
+  const uClicksYearly = last4Years.map(year => {
+    const count = uVisits.filter(v => {
+      return new Date(v.timestamp).getFullYear() === year;
+    }).length;
+    return {
+      label: `${year}`,
+      value: count
+    };
+  });
+
+  let activeSelectedClicks = [];
+  if (selectedTimeRange === '7days') {
+    activeSelectedClicks = uClicks7Days;
+  } else if (selectedTimeRange === 'monthly') {
+    activeSelectedClicks = uClicksMonthly;
+  } else {
+    activeSelectedClicks = uClicksYearly;
+  }
+
+  const deviceChartData = [
+    { label: 'Desktop', value: uDevices['Desktop'] || 0, color: '#2563eb' },
+    { label: 'Mobile', value: uDevices['Mobile'] || 0, color: '#10b981' },
+    { label: 'Tablet', value: uDevices['Tablet'] || 0, color: '#f59e0b' }
+  ];
+
   // Styling helper
   const cardBgClass = 'glass-card text-surface-900 dark:text-white';
 
@@ -469,66 +537,6 @@ const AnalyticsDashboard = ({
       {/* DETAILED VIEW FOR SINGLE SELECTED LINK */}
       {/* -------------------------------------------------- */}
       {selectedUrl ? (() => {
-        const uVisits = selectedUrl.visits || [];
-        const uBrowsers = {};
-        const uDevices = {};
-
-        uVisits.forEach(v => {
-          uBrowsers[v.browser || 'Unknown'] = (uBrowsers[v.browser || 'Unknown'] || 0) + 1;
-          uDevices[v.device || 'Desktop'] = (uDevices[v.device || 'Desktop'] || 0) + 1;
-        });
-
-        const uClicks7Days = last7Days.map(day => {
-          const count = uVisits.filter(v => {
-            const vDate = new Date(v.timestamp).toISOString().split('T')[0];
-            return vDate === day;
-          }).length;
-          const dateObj = new Date(day);
-          const dayName = dateObj.toLocaleDateString(undefined, { weekday: 'short' });
-          const dayNum = dateObj.getDate().toString().padStart(2, '0');
-          const monthNum = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-          return {
-            label: `${dayName},${dayNum}/${monthNum}`,
-            value: count
-          };
-        });
-
-        const uClicksMonthly = last6Months.map(m => {
-          const count = uVisits.filter(v => {
-            const vDate = new Date(v.timestamp);
-            return vDate.getFullYear() === m.year && vDate.getMonth() === m.month;
-          }).length;
-          return {
-            label: `${m.label},'${m.yearLabel}`,
-            value: count
-          };
-        });
-
-        const uClicksYearly = last4Years.map(year => {
-          const count = uVisits.filter(v => {
-            return new Date(v.timestamp).getFullYear() === year;
-          }).length;
-          return {
-            label: `${year}`,
-            value: count
-          };
-        });
-
-        let activeSelectedClicks = [];
-        if (selectedTimeRange === '7days') {
-          activeSelectedClicks = uClicks7Days;
-        } else if (selectedTimeRange === 'monthly') {
-          activeSelectedClicks = uClicksMonthly;
-        } else {
-          activeSelectedClicks = uClicksYearly;
-        }
-
-        const deviceChartData = [
-          { label: 'Desktop', value: uDevices['Desktop'] || 0, color: '#2563eb' },
-          { label: 'Mobile', value: uDevices['Mobile'] || 0, color: '#10b981' },
-          { label: 'Tablet', value: uDevices['Tablet'] || 0, color: '#f59e0b' }
-        ];
-
         const isLinkExpired = selectedUrl.expiresAt && new Date(selectedUrl.expiresAt) < currentTime;
 
         return (
@@ -594,7 +602,7 @@ const AnalyticsDashboard = ({
             </div>
 
             {/* Metric widgets */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className={`p-6 rounded-3xl border ${cardBgClass} flex flex-col justify-between h-28`}>
                 <span className="text-xs opacity-75 font-semibold">Redirect Clicks</span>
                 <div>
@@ -615,7 +623,7 @@ const AnalyticsDashboard = ({
                   </p>
                 </div>
               </div>
-              <div className={`p-6 rounded-3xl border ${cardBgClass} flex flex-col justify-between h-28`}>
+              <div className={`p-6 rounded-3xl border ${cardBgClass} flex flex-col justify-between h-28 col-span-2 sm:col-span-1`}>
                 <span className="text-xs opacity-75 font-semibold">Created On</span>
                 <div>
                   <h3 className="text-lg font-black">{new Date(selectedUrl.createdAt).toLocaleDateString()}</h3>
@@ -624,10 +632,49 @@ const AnalyticsDashboard = ({
               </div>
             </div>
 
+            {/* Mobile Graphics Tab Select (History vs Devices) */}
+            <div className="flex lg:hidden p-1 rounded-2xl bg-surface-100 dark:bg-surface-900 border border-surface-200/50 dark:border-surface-800">
+              <button
+                onClick={() => setActiveMobileChartTab('history')}
+                className={`flex-1 py-3 rounded-xl text-xs font-black transition-all border-none cursor-pointer flex items-center justify-center gap-2 ${
+                  activeMobileChartTab === 'history'
+                    ? 'bg-white dark:bg-surface-850 shadow-md text-primary-500 font-bold'
+                    : 'bg-transparent text-slate-500 dark:text-slate-400'
+                }`}
+                type="button"
+              >
+                <Activity size={14} />
+                Click History
+              </button>
+              <button
+                onClick={() => setActiveMobileChartTab('devices')}
+                className={`flex-1 py-3 rounded-xl text-xs font-black transition-all border-none cursor-pointer flex items-center justify-center gap-2 ${
+                  activeMobileChartTab === 'devices'
+                    ? 'bg-white dark:bg-surface-850 shadow-md text-primary-500 font-bold'
+                    : 'bg-transparent text-slate-500 dark:text-slate-400'
+                }`}
+                type="button"
+              >
+                <Laptop size={14} />
+                Device Share
+              </button>
+            </div>
+
             {/* Graphics Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Click History bar chart */}
-              <div className={`lg:col-span-6 p-8 rounded-3xl border ${cardBgClass}`}>
+              <div 
+                onClick={() => setZoomedChart('link-history')}
+                className={`lg:col-span-6 ${activeMobileChartTab === 'history' ? 'block' : 'hidden lg:block'} p-8 rounded-3xl border ${cardBgClass} cursor-pointer hover:border-primary-500/30 transition-all active:scale-[0.99] relative group`}
+              >
+                {/* Maximize Icon Indicators */}
+                <div className="absolute top-4 right-4 p-2 rounded-xl bg-primary-500/10 text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none lg:block hidden">
+                  <Maximize2 size={14} />
+                </div>
+                <div className="absolute top-4 right-4 p-2 rounded-xl bg-primary-500/10 text-primary-500 lg:hidden block pointer-events-none">
+                  <Maximize2 size={12} />
+                </div>
+
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
@@ -636,7 +683,10 @@ const AnalyticsDashboard = ({
                     </div>
                     
                     {/* Range Selector Tabs */}
-                    <div className="flex p-1 rounded-xl bg-surface-100 dark:bg-surface-850 border border-surface-200/50 dark:border-surface-800 self-start sm:self-auto">
+                    <div 
+                      onClick={(e) => e.stopPropagation()} 
+                      className="flex p-1 rounded-xl bg-surface-100 dark:bg-surface-850 border border-surface-200/50 dark:border-surface-800 self-start sm:self-auto"
+                    >
                       <button
                         onClick={() => setSelectedTimeRange('7days')}
                         className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all border-none cursor-pointer ${
@@ -674,7 +724,18 @@ const AnalyticsDashboard = ({
               </div>
 
               {/* Devices */}
-              <div className={`lg:col-span-6 p-8 rounded-3xl border ${cardBgClass}`}>
+              <div 
+                onClick={() => setZoomedChart('link-devices')}
+                className={`lg:col-span-6 ${activeMobileChartTab === 'devices' ? 'block' : 'hidden lg:block'} p-8 rounded-3xl border ${cardBgClass} cursor-pointer hover:border-primary-500/30 transition-all active:scale-[0.99] relative group`}
+              >
+                {/* Maximize Icon Indicators */}
+                <div className="absolute top-4 right-4 p-2 rounded-xl bg-primary-500/10 text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none lg:block hidden">
+                  <Maximize2 size={14} />
+                </div>
+                <div className="absolute top-4 right-4 p-2 rounded-xl bg-primary-500/10 text-primary-500 lg:hidden block pointer-events-none">
+                  <Maximize2 size={12} />
+                </div>
+
                 <DonutChart data={deviceChartData} isDark={isDark} title="Devices Breakdown" />
               </div>
             </div>
@@ -743,7 +804,7 @@ const AnalyticsDashboard = ({
           </div>
 
           {/* Metrics Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {/* 1. Total Links */}
             <div className={`p-6 rounded-2xl border ${
               isDark ? 'bg-surface-900/60 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
@@ -755,7 +816,7 @@ const AnalyticsDashboard = ({
                 <h3 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                   {totalCreated}
                 </h3>
-                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">
+                <p className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">
                   Shortlinks created overall
                 </p>
               </div>
@@ -772,7 +833,7 @@ const AnalyticsDashboard = ({
                 <h3 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                   {activeLinksCount}
                 </h3>
-                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">
+                <p className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">
                   Active non-expired links
                 </p>
               </div>
@@ -789,7 +850,7 @@ const AnalyticsDashboard = ({
                 <h3 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                   {expiredLinksCount}
                 </h3>
-                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">
+                <p className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">
                   Expired time-limited links
                 </p>
               </div>
@@ -806,17 +867,56 @@ const AnalyticsDashboard = ({
                 <h3 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                   {totalClicks}
                 </h3>
-                <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">
+                <p className="text-[10px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">
                   Redirections resolved globally
                 </p>
               </div>
             </div>
           </div>
 
+          {/* Mobile Graphics Tab Select (History vs Devices) */}
+          <div className="flex lg:hidden p-1 rounded-2xl bg-surface-100 dark:bg-surface-900 border border-surface-200/50 dark:border-surface-800">
+            <button
+              onClick={() => setActiveMobileChartTab('history')}
+              className={`flex-1 py-3 rounded-xl text-xs font-black transition-all border-none cursor-pointer flex items-center justify-center gap-2 ${
+                activeMobileChartTab === 'history'
+                  ? 'bg-white dark:bg-surface-850 shadow-md text-primary-500 font-bold'
+                  : 'bg-transparent text-slate-500 dark:text-slate-400'
+              }`}
+              type="button"
+            >
+              <Activity size={14} />
+              Click History
+            </button>
+            <button
+              onClick={() => setActiveMobileChartTab('devices')}
+              className={`flex-1 py-3 rounded-xl text-xs font-black transition-all border-none cursor-pointer flex items-center justify-center gap-2 ${
+                activeMobileChartTab === 'devices'
+                  ? 'bg-white dark:bg-surface-850 shadow-md text-primary-500 font-bold'
+                  : 'bg-transparent text-slate-500 dark:text-slate-400'
+              }`}
+              type="button"
+            >
+              <Laptop size={14} />
+              Device Share
+            </button>
+          </div>
+
           {/* Core Graphics layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Click History bar chart */}
-            <div className={`lg:col-span-6 p-8 rounded-3xl border ${cardBgClass}`}>
+            <div 
+              onClick={() => setZoomedChart('global-history')}
+              className={`lg:col-span-6 ${activeMobileChartTab === 'history' ? 'block' : 'hidden lg:block'} p-8 rounded-3xl border ${cardBgClass} cursor-pointer hover:border-primary-500/30 transition-all active:scale-[0.99] relative group`}
+            >
+              {/* Maximize Icon Indicators */}
+              <div className="absolute top-4 right-4 p-2 rounded-xl bg-primary-500/10 text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none lg:block hidden">
+                <Maximize2 size={14} />
+              </div>
+              <div className="absolute top-4 right-4 p-2 rounded-xl bg-primary-500/10 text-primary-500 lg:hidden block pointer-events-none">
+                <Maximize2 size={12} />
+              </div>
+
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
@@ -825,7 +925,10 @@ const AnalyticsDashboard = ({
                   </div>
                   
                   {/* Range Selector Tabs */}
-                  <div className="flex p-1 rounded-xl bg-surface-100 dark:bg-surface-850 border border-surface-200/50 dark:border-surface-800 self-start sm:self-auto">
+                  <div 
+                    onClick={(e) => e.stopPropagation()} 
+                    className="flex p-1 rounded-xl bg-surface-100 dark:bg-surface-850 border border-surface-200/50 dark:border-surface-800 self-start sm:self-auto"
+                  >
                     <button
                       onClick={() => setGlobalTimeRange('7days')}
                       className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all border-none cursor-pointer ${
@@ -863,7 +966,18 @@ const AnalyticsDashboard = ({
             </div>
 
             {/* Devices breakdown */}
-            <div className={`lg:col-span-6 p-8 rounded-3xl border ${cardBgClass}`}>
+            <div 
+              onClick={() => setZoomedChart('global-devices')}
+              className={`lg:col-span-6 ${activeMobileChartTab === 'devices' ? 'block' : 'hidden lg:block'} p-8 rounded-3xl border ${cardBgClass} cursor-pointer hover:border-primary-500/30 transition-all active:scale-[0.99] relative group`}
+            >
+              {/* Maximize Icon Indicators */}
+              <div className="absolute top-4 right-4 p-2 rounded-xl bg-primary-500/10 text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none lg:block hidden">
+                <Maximize2 size={14} />
+              </div>
+              <div className="absolute top-4 right-4 p-2 rounded-xl bg-primary-500/10 text-primary-500 lg:hidden block pointer-events-none">
+                <Maximize2 size={12} />
+              </div>
+
               <DonutChart 
                 data={[
                   { label: 'Desktop', value: globalDevices['Desktop'] || 0, color: '#2563eb' },
@@ -1070,6 +1184,70 @@ const AnalyticsDashboard = ({
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* Zoom Chart Modal */}
+      {zoomedChart && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Glass backdrop */}
+          <div
+            onClick={() => setZoomedChart(null)}
+            className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity duration-350 animate-in fade-in"
+          />
+
+          {/* Modal Container */}
+          <div className={`relative z-10 w-full max-w-2xl p-6 md:p-8 rounded-[32px] border shadow-2xl flex flex-col gap-6 animate-in zoom-in-95 duration-250 ${
+            isDark ? 'bg-surface-900 border-surface-800 text-white' : 'bg-white border-slate-100 text-surface-900'
+          }`}>
+            {/* Header */}
+            <div className="flex justify-between items-start border-b border-surface-200 dark:border-surface-850/50 pb-3">
+              <div>
+                <h3 className="text-lg font-extrabold font-sans">
+                  {zoomedChart.includes('history') ? 'Click History Trend Analysis' : 'Device & Browser Share'}
+                </h3>
+                <p className="text-xs opacity-60 mt-0.5">
+                  {zoomedChart.includes('global') ? 'Global traffic overview' : `Stats for neb.la/${selectedUrl?.shortCode}`}
+                </p>
+              </div>
+              <button
+                onClick={() => setZoomedChart(null)}
+                className={`p-2 rounded-full border cursor-pointer transition-all ${
+                  isDark ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-black/5 border-black/10 hover:bg-black/10 text-slate-800'
+                }`}
+                type="button"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Chart Body */}
+            <div className="flex items-center justify-center w-full min-h-[300px]">
+              {zoomedChart.includes('history') ? (
+                <BarChart
+                  data={zoomedChart.includes('global') ? activeGlobalClicks : activeSelectedClicks}
+                  isDark={isDark}
+                  zoomed={true}
+                />
+              ) : (
+                <DonutChart
+                  data={zoomedChart.includes('global') ? [
+                    { label: 'Desktop', value: globalDevices['Desktop'] || 0, color: '#2563eb' },
+                    { label: 'Mobile', value: globalDevices['Mobile'] || 0, color: '#10b981' },
+                    { label: 'Tablet', value: globalDevices['Tablet'] || 0, color: '#f59e0b' }
+                  ] : deviceChartData}
+                  isDark={isDark}
+                  title="Device breakdown details"
+                  zoomed={true}
+                />
+              )}
+            </div>
+            
+            {/* Hint */}
+            <p className="text-[10px] opacity-40 text-center font-bold tracking-wider uppercase">
+              Tap outside or click close button to return
+            </p>
+          </div>
         </div>
       )}
     </div>
