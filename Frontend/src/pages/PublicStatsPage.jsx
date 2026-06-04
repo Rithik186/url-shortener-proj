@@ -480,7 +480,7 @@ const PublicStatsPage = () => {
   }
 
   return (
-    <div className={`min-h-screen pb-16 ${isDark ? 'bg-transparent text-white' : 'bg-surface-50 text-surface-900'}`}>
+    <div className={`min-h-screen pb-16 ${isDark ? 'bg-transparent text-white' : 'bg-transparent text-surface-900'}`}>
       {/* Header Bar */}
       <header className={`sticky top-0 z-30 backdrop-blur-md border-b py-4 px-6 flex items-center justify-between ${
         isDark ? 'bg-surface-100/80 border-surface-850' : 'bg-white/80 border-surface-200 shadow-sm'
@@ -496,9 +496,7 @@ const PublicStatsPage = () => {
 
       <main className="max-w-6xl mx-auto px-6 mt-10 space-y-8">
         {/* Link Identity Card */}
-        <div className={`p-6 md:p-8 rounded-3xl border shadow-xl ${
-          isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200'
-        }`}>
+        <div className="p-6 md:p-8 rounded-3xl theme-card shadow-xl">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="space-y-2 min-w-0 text-left">
               <span className="text-[10px] uppercase font-bold tracking-widest text-primary-500">Public Live Dashboard</span>
@@ -525,17 +523,17 @@ const PublicStatsPage = () => {
 
         {/* Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className={`p-6 rounded-3xl border shadow-sm text-left ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200'}`}>
+          <div className="p-6 rounded-3xl theme-card shadow-sm text-left">
             <span className="text-xs opacity-75 font-semibold">Total Clicks</span>
             <h2 className="text-4xl font-black mt-2 text-primary-500">{stats.clicks}</h2>
             <p className="text-[10px] opacity-60 mt-1">Accumulated overall clicks</p>
           </div>
-          <div className={`p-6 rounded-3xl border shadow-sm text-left ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200'}`}>
+          <div className="p-6 rounded-3xl theme-card shadow-sm text-left">
             <span className="text-xs opacity-75 font-semibold">Created Date</span>
             <h2 className="text-2xl font-black mt-3">{new Date(stats.createdAt).toLocaleDateString()}</h2>
             <p className="text-[10px] opacity-60 mt-1">Initialized at {new Date(stats.createdAt).toLocaleTimeString()}</p>
           </div>
-          <div className={`p-6 rounded-3xl border shadow-sm text-left ${isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200'}`}>
+          <div className="p-6 rounded-3xl theme-card shadow-sm text-left">
             <span className="text-xs opacity-75 font-semibold">Last Visited</span>
             <h2 className="text-2xl font-black mt-3">
               {visits.length > 0 ? new Date(visits[visits.length - 1].timestamp).toLocaleDateString() : 'Never'}
@@ -549,9 +547,7 @@ const PublicStatsPage = () => {
         {/* Charting & Distribution */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Click History bar chart */}
-          <div className={`lg:col-span-6 p-6 md:p-8 rounded-3xl border ${
-            isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
-          }`}>
+          <div className="lg:col-span-6 p-6 md:p-8 rounded-3xl theme-card shadow-sm">
             <div className="space-y-6 text-left">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -598,17 +594,13 @@ const PublicStatsPage = () => {
           </div>
 
           {/* Device Breakdown pie chart */}
-          <div className={`lg:col-span-6 p-6 md:p-8 rounded-3xl border ${
-            isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
-          }`}>
+          <div className="lg:col-span-6 p-6 md:p-8 rounded-3xl theme-card shadow-sm">
             <DonutChart data={deviceData} isDark={isDark} title="Device Breakdown" />
           </div>
         </div>
 
         {/* Recent Live logs */}
-        <div className={`p-6 md:p-8 rounded-3xl border ${
-          isDark ? 'bg-surface-900 border-surface-800' : 'bg-white border-surface-200 shadow-sm'
-        }`}>
+        <div className="p-6 md:p-8 rounded-3xl theme-card shadow-sm">
           <h3 className="text-lg font-bold mb-6 font-[family-name:var(--font-display)] flex items-center gap-2 text-left">
             <Clock size={18} className="text-primary-500" />
             Live Visitor logs

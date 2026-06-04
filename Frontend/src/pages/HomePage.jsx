@@ -987,7 +987,7 @@ const HomePage = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
-      className={`min-h-screen flex transition-colors duration-300 ${isDark ? 'bg-transparent text-white' : 'bg-surface-50 text-surface-900'}`}
+      className={`min-h-screen flex transition-colors duration-300 ${isDark ? 'bg-transparent text-white' : 'bg-transparent text-surface-900'}`}
     >
 
       {/* Sliding Sidebar Menu & Backdrop (Triggerable on Desktop & Mobile) */}
@@ -1317,10 +1317,7 @@ const HomePage = () => {
                         return (
                           <div
                             key={url._id}
-                            className={`p-5 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-305 ${isDark
-                              ? 'bg-[#0f1a30]/40 border-white/[0.06] hover:bg-[#111f3b]/60 hover:border-primary-500/35 hover:shadow-[0_8px_24px_rgba(37,99,235,0.12)]'
-                              : 'bg-white/10 border-white/20 hover:bg-white/20 hover:border-primary-500/20 shadow-sm'
-                              }`}
+                            className="p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 theme-card"
                           >
                             {/* Left: Icon & URL Details */}
                             <div className="flex items-start gap-4 min-w-0 flex-1">
@@ -1376,10 +1373,10 @@ const HomePage = () => {
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => handleCopy(url.shortCode, url._id)}
-                                  className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${copiedId === url._id
-                                    ? 'bg-green-600 text-white shadow-md'
-                                    : isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
-                                    }`}
+                                  className={copiedId === url._id
+                                    ? 'p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer bg-green-600 text-white shadow-md'
+                                    : 'theme-btn-action'
+                                    }
                                   title="Copy Link"
                                   type="button"
                                 >
@@ -1388,8 +1385,7 @@ const HomePage = () => {
 
                                 <button
                                   onClick={() => setSelectedQrUrl(url)}
-                                  className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
-                                    }`}
+                                  className="theme-btn-action"
                                   title="View QR Code"
                                   type="button"
                                 >
@@ -1398,8 +1394,7 @@ const HomePage = () => {
 
                                 <button
                                   onClick={() => handleWhatsAppShare(`${API_BASE_URL}/${url.shortCode}`)}
-                                  className={`p-2.5 rounded-xl transition-all border-none cursor-pointer ${isDark ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400' : 'bg-emerald-55/40 hover:bg-emerald-55/70 text-emerald-600 shadow-sm'
-                                    }`}
+                                  className="theme-btn-success"
                                   title="Share on WhatsApp"
                                   type="button"
                                 >
@@ -1408,8 +1403,7 @@ const HomePage = () => {
 
                                 <button
                                   onClick={() => handleSystemShare(`${API_BASE_URL}/${url.shortCode}`)}
-                                  className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-primary-500/10 hover:bg-primary-500/20 text-primary-400' : 'bg-violet-55/40 hover:bg-violet-55/70 text-primary-700 shadow-sm'
-                                    }`}
+                                  className="theme-btn-action"
                                   title="Share Link"
                                   type="button"
                                 >
@@ -1421,8 +1415,7 @@ const HomePage = () => {
                                     setSelectedUrlForAnalytics(url);
                                     setActiveTab('analytics');
                                   }}
-                                  className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
-                                    }`}
+                                  className="theme-btn-action"
                                   title="View Analytics"
                                   type="button"
                                 >
@@ -1431,8 +1424,7 @@ const HomePage = () => {
 
                                 <button
                                   onClick={() => handleEditClick(url)}
-                                  className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
-                                    }`}
+                                  className="theme-btn-action"
                                   title="Edit URL"
                                   type="button"
                                 >
@@ -1441,8 +1433,7 @@ const HomePage = () => {
 
                                 <button
                                   onClick={() => handleDelete(url._id)}
-                                  className={`p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'bg-red-55/40 hover:bg-red-55/70 text-red-600 shadow-sm'
-                                    }`}
+                                  className="theme-btn-danger"
                                   title="Delete URL"
                                   type="button"
                                 >
@@ -1605,14 +1596,12 @@ const HomePage = () => {
                             onClick={(e) => handleCardClick(url, e)}
                             onTouchStart={() => handleTouchStart(url._id)}
                             onTouchEnd={handleTouchEnd}
-                            className={`p-5 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-305 ${
+                            className={`p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-305 ${
                               isSelected
                                 ? isDark 
                                   ? 'bg-primary-500/10 border-primary-500 shadow-[0_8px_24px_rgba(37,99,235,0.18)]' 
                                   : 'bg-primary-50 border-primary-400 shadow-[0_8px_24px_rgba(37,99,235,0.08)]'
-                                : isDark
-                                  ? 'bg-[#0f1a30]/40 border-white/[0.06] hover:bg-[#111f3b]/60 hover:border-primary-500/35 hover:shadow-[0_8px_24px_rgba(37,99,235,0.12)]'
-                                  : 'bg-white/10 border-white/20 hover:bg-white/20 hover:border-primary-500/20 shadow-sm'
+                                : 'theme-card'
                             }`}
                           >
                             {/* Left: Checkbox, Icon & URL Details */}
@@ -1630,7 +1619,7 @@ const HomePage = () => {
                                     ? 'bg-primary-500 border-primary-500 text-white'
                                     : isDark 
                                       ? 'border-white/20 hover:border-primary-500/50 bg-[#0b1329]/50' 
-                                      : 'border-slate-350 hover:border-primary-500/50 bg-white'
+                                      : 'border-slate-355 hover:border-primary-500/50 bg-white'
                                 }`}>
                                   {isSelected && <Check size={12} strokeWidth={3} />}
                                 </div>
@@ -1689,7 +1678,7 @@ const HomePage = () => {
                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] opacity-60">
                                   <span>Created: {new Date(url.createdAt).toLocaleDateString()}</span>
                                   {url.expiresAt && (
-                                    <span className={isExpired ? 'text-red-550' : ''}>
+                                    <span className={isExpired ? 'text-red-555' : ''}>
                                       Expires: {new Date(url.expiresAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                                     </span>
                                   )}
@@ -1703,10 +1692,10 @@ const HomePage = () => {
                               <div className="grid grid-cols-4 sm:flex items-center gap-2 w-full sm:w-auto">
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleCopy(url.shortCode, url._id); }}
-                                  className={`flex items-center justify-center w-full aspect-square sm:w-auto sm:aspect-auto p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${copiedId === url._id
-                                    ? 'bg-green-600 text-white shadow-md'
-                                    : isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
-                                    }`}
+                                  className={copiedId === url._id
+                                    ? 'flex items-center justify-center w-full aspect-square sm:w-auto sm:aspect-auto p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer bg-green-600 text-white shadow-md'
+                                    : 'theme-btn-action'
+                                    }
                                   title="Copy Link"
                                   type="button"
                                 >
@@ -1715,8 +1704,7 @@ const HomePage = () => {
 
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setSelectedQrUrl(url); }}
-                                  className={`flex items-center justify-center w-full aspect-square sm:w-auto sm:aspect-auto p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
-                                    }`}
+                                  className="theme-btn-action"
                                   title="View QR Code"
                                   type="button"
                                 >
@@ -1725,8 +1713,7 @@ const HomePage = () => {
 
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleWhatsAppShare(`${API_BASE_URL}/${url.shortCode}`); }}
-                                  className={`flex items-center justify-center w-full aspect-square sm:w-auto sm:aspect-auto p-2.5 rounded-xl transition-all border-none cursor-pointer ${isDark ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400' : 'bg-emerald-55/40 hover:bg-emerald-55/70 text-emerald-600 shadow-sm'
-                                    }`}
+                                  className="theme-btn-success"
                                   title="Share on WhatsApp"
                                   type="button"
                                 >
@@ -1735,8 +1722,7 @@ const HomePage = () => {
 
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleSystemShare(`${API_BASE_URL}/${url.shortCode}`); }}
-                                  className={`flex items-center justify-center w-full aspect-square sm:w-auto sm:aspect-auto p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-primary-500/10 hover:bg-primary-500/20 text-primary-400' : 'bg-violet-55/40 hover:bg-violet-55/70 text-primary-700 shadow-sm'
-                                    }`}
+                                  className="theme-btn-action"
                                   title="Share Link"
                                   type="button"
                                 >
@@ -1749,8 +1735,7 @@ const HomePage = () => {
                                     setSelectedUrlForAnalytics(url);
                                     setActiveTab('analytics');
                                   }}
-                                  className={`flex items-center justify-center w-full aspect-square sm:w-auto sm:aspect-auto p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
-                                    }`}
+                                  className="theme-btn-action"
                                   title="View Analytics"
                                   type="button"
                                 >
@@ -1759,11 +1744,10 @@ const HomePage = () => {
 
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleToggleActive(url); }}
-                                  className={`flex items-center justify-center w-full aspect-square sm:w-auto sm:aspect-auto p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${
-                                    !isUrlActive
-                                      ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-500'
-                                      : isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
-                                  }`}
+                                  className={!isUrlActive
+                                    ? 'flex items-center justify-center w-full aspect-square sm:w-auto sm:aspect-auto p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer bg-amber-500/10 hover:bg-amber-500/20 text-amber-500'
+                                    : 'theme-btn-action'
+                                  }
                                   title={isUrlActive ? "Disable Link" : "Enable Link"}
                                   type="button"
                                 >
@@ -1772,8 +1756,7 @@ const HomePage = () => {
 
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleEditClick(url); }}
-                                  className={`flex items-center justify-center w-full aspect-square sm:w-auto sm:aspect-auto p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white/20 hover:bg-white/30 text-surface-900 shadow-sm'
-                                    }`}
+                                  className="theme-btn-action"
                                   title="Edit URL"
                                   type="button"
                                 >
@@ -1782,8 +1765,7 @@ const HomePage = () => {
 
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleDelete(url._id); }}
-                                  className={`flex items-center justify-center w-full aspect-square sm:w-auto sm:aspect-auto p-2.5 rounded-xl transition-all duration-300 border-none cursor-pointer ${isDark ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400' : 'bg-red-55/40 hover:bg-red-55/70 text-red-600 shadow-sm'
-                                    }`}
+                                  className="theme-btn-danger"
                                   title="Delete URL"
                                   type="button"
                                 >

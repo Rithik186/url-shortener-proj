@@ -82,7 +82,7 @@ const Signup = () => {
   })
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-6 transition-colors duration-300 relative ${isDark ? 'bg-transparent' : 'bg-surface-50'}`}>
+    <div className={`min-h-screen flex items-center justify-center p-6 transition-colors duration-300 relative ${isDark ? 'bg-transparent' : 'bg-transparent'}`}>
       
       {/* Back Button */}
       <button 

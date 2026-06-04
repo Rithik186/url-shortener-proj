@@ -112,25 +112,40 @@ const features = [
 
 /* ── Feature Card ────────────────────────────────────────────────────── */
 
-const FeatureCard = ({ feature, index }) => {
+const cardVariants = {
+  hidden: { opacity: 0, y: 30 },
+  show: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { 
+      duration: 0.6, 
+      ease: [0.16, 1, 0.3, 1] 
+    } 
+  }
+}
+
+const FeatureCard = ({ feature }) => {
   const Icon = feature.icon
   const { isDark } = useTheme()
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.6, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+      variants={cardVariants}
     >
       <SpotlightCard
-        spotlightColor={SPOTLIGHT_COLOR}
-        className={`h-full transition-all duration-500 hover:-translate-y-1.5 ${
-          isDark
-            ? '!bg-surface-900/80 !border-surface-800'
-            : '!bg-white !border-surface-300/80 shadow-sm'
+        className={`h-full hover:-translate-y-1.5 relative group ${
+          isDark 
+            ? '' 
+            : 'bg-gradient-to-br from-white via-white to-primary-500/[0.02]'
         }`}
       >
+        {/* Top colored accent line */}
+        <div className={`absolute top-0 left-0 right-0 h-[2px] transition-all duration-300 ${
+          isDark 
+            ? 'bg-gradient-to-r from-primary-500/20 via-indigo-500/20 to-purple-500/20 group-hover:from-primary-500/50 group-hover:via-indigo-500/50 group-hover:to-purple-500/50' 
+            : 'bg-gradient-to-r from-primary-500/30 via-indigo-500/35 to-primary-500/20 group-hover:from-primary-500/60 group-hover:via-indigo-500/70 group-hover:to-primary-500/40'
+        }`} />
+
         <div className="relative z-10">
           {/* Icon */}
           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-300 ${
@@ -155,6 +170,15 @@ const FeatureCard = ({ feature, index }) => {
 }
 
 /* ── Section ─────────────────────────────────────────────────────────── */
+
+const containerVariants = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.06,
+    }
+  }
+}
 
 const FeaturesSection = () => {
   const { isDark } = useTheme()
@@ -181,12 +205,18 @@ const FeaturesSection = () => {
           </p>
         </motion.div>
 
-        {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <FeatureCard key={feature.title} feature={feature} index={index} />
+        {/* Feature Grid with Staggered Entrance */}
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-20px' }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {features.map((feature) => (
+            <FeatureCard key={feature.title} feature={feature} />
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

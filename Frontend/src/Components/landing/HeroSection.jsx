@@ -32,9 +32,9 @@ const HeroSection = () => {
             isDark ? 'text-white' : 'text-surface-900'
           }`}
         >
-          Smarter Links,
+          Shrink Your Link,
           <br />
-          <span className="gradient-text">Better Clicks.</span>
+          <span className="gradient-text">In A Blink.</span>
         </motion.h1>
 
         {/* Subheading */}

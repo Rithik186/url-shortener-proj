@@ -80,7 +80,7 @@ const LandingPage = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
-      className={`min-h-screen relative overflow-x-hidden ${isDark ? 'bg-transparent text-white' : 'bg-surface-50 text-surface-900'}`}
+      className={`min-h-screen relative overflow-x-hidden ${isDark ? 'bg-transparent text-white' : 'bg-transparent text-surface-900'}`}
     >
       
       {/* Brand Logo */}
@@ -144,8 +144,8 @@ const LandingPage = () => {
           />
           
           {/* Modal Container */}
-          <div className={`relative w-full max-w-md p-6 md:p-8 rounded-3xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 border ${
-            isDark ? 'bg-surface-900 border-surface-800 text-white' : 'bg-white border border-surface-150 text-surface-950'
+          <div className={`relative w-full max-w-md p-6 md:p-8 rounded-3xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 theme-card ${
+            isDark ? 'text-white' : 'text-surface-950'
           }`}>
             {/* Close button */}
             <button 
@@ -171,7 +171,7 @@ const LandingPage = () => {
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Full Name</label>
                 <div className={`relative flex items-center rounded-xl border transition-colors ${
-                  isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
+                  isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-white border-slate-200 focus-within:border-primary-500'
                 }`}>
                   <User size={16} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
                   <input
@@ -188,7 +188,7 @@ const LandingPage = () => {
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Email Address</label>
                 <div className={`relative flex items-center rounded-xl border transition-colors ${
-                  isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
+                  isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-white border-slate-200 focus-within:border-primary-500'
                 }`}>
                   <Mail size={16} className={`absolute left-4 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
                   <input
@@ -205,7 +205,7 @@ const LandingPage = () => {
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-surface-400' : 'text-surface-600'}`}>Your Message</label>
                 <div className={`relative flex items-start rounded-xl border transition-colors ${
-                  isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-surface-50 border-surface-300 focus-within:border-primary-500'
+                  isDark ? 'bg-surface-950 border-surface-700 focus-within:border-primary-500' : 'bg-white border-slate-200 focus-within:border-primary-500'
                 }`}>
                   <MessageSquare size={16} className={`absolute left-4 top-3.5 ${isDark ? 'text-surface-500' : 'text-surface-400'}`} />
                   <textarea
