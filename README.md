@@ -23,11 +23,19 @@
 
 <div align="center">
 
-<a href="https://www.loom.com/share/03cd6db43dad47dda13d6344a6645d99">
-  <img src="https://cdn.loom.com/sessions/thumbnails/03cd6db43dad47dda13d6344a6645d99-with-play.gif" alt="Nebula — Full Project Walkthrough" width="80%" />
+<a href="https://www.loom.com/share/03cd6db43dad47dda13d6344a6645d99" target="_blank">
+  <img src="https://cdn.loom.com/sessions/thumbnails/03cd6db43dad47dda13d6344a6645d99-with-play.gif" alt="Nebula — Full Project Walkthrough" width="85%" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
 </a>
 
-**👆 Click to watch the full project walkthrough on Loom**
+<br/><br/>
+
+## 🚀 [Watch the Full Project Demo Video on Loom](https://www.loom.com/share/03cd6db43dad47dda13d6344a6645d99)
+
+<h3>
+  🔗 <b>Direct Link:</b> <a href="https://www.loom.com/share/03cd6db43dad47dda13d6344a6645d99" target="_blank">https://www.loom.com/share/03cd6db43dad47dda13d6344a6645d99</a>
+</h3>
+
+<br/>
 
 > 🎥 *A complete demo showcasing URL shortening, analytics dashboard, QR code generation, Google OAuth, theme switching, and the responsive glassmorphism UI in action.*
 
