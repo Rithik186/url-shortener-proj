@@ -4,6 +4,8 @@
 
 ### Transform long URLs into powerful short links
 
+<h3>🚀 <a href="https://nebula-oia2.onrender.com/" target="_blank">Live App Website</a></h3>
+
 [![Node.js](https://img.shields.io/badge/Node.js-22+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
@@ -514,9 +516,11 @@ npm run dev
 
 | URL | Description |
 |-----|-------------|
+| `https://nebula-oia2.onrender.com/` | Deployed Live Application (Render) |
 | `http://localhost:5173` | Frontend application |
 | `http://localhost:5000` | Backend API |
 | `http://localhost:5000/api/health` | Health check endpoint |
+
 
 ---
 
