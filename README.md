@@ -19,6 +19,22 @@
 
 ---
 
+## 🎬 Project Demo
+
+<div align="center">
+
+<a href="https://www.loom.com/share/03cd6db43dad47dda13d6344a6645d99">
+  <img src="https://cdn.loom.com/sessions/thumbnails/03cd6db43dad47dda13d6344a6645d99-with-play.gif" alt="Nebula — Full Project Walkthrough" width="80%" />
+</a>
+
+**👆 Click to watch the full project walkthrough on Loom**
+
+> 🎥 *A complete demo showcasing URL shortening, analytics dashboard, QR code generation, Google OAuth, theme switching, and the responsive glassmorphism UI in action.*
+
+</div>
+
+---
+
 ## 📖 About the Project
 
 Nebula is not just another URL shortener — it's a **complete link management platform**. Whether you're a marketer tracking campaign performance, a developer sharing quick links, or a business monitoring click analytics, Nebula provides the tools you need with a beautiful, intuitive interface.
@@ -546,17 +562,38 @@ npm run dev
 
 <div align="center">
 
-### Landing Page — Hero
+### 🏠 Landing Page — Hero
 <img src="Frontend/src/assets/1.png" alt="Landing Page - Hero Section" width="100%" />
 
-### Landing Page — How It Works
+### 🔄 Landing Page — How It Works
 <img src="Frontend/src/assets/2.png" alt="Landing Page - How It Works" width="100%" />
 
-### Dashboard — URL Shortener
+### 🔗 Dashboard — URL Shortener
 <img src="Frontend/src/assets/3.png" alt="Dashboard - URL Shortener" width="100%" />
 
-### Dashboard — Analytics
+### 📊 Dashboard — Analytics
 <img src="Frontend/src/assets/4.png" alt="Dashboard - Analytics" width="100%" />
+
+### 📈 Click History Trend Analysis
+<img src="screenshots/click-history-trend.png" alt="Click History Trend Analysis Modal" width="100%" />
+
+### 📱 Device & Browser Share
+<img src="screenshots/device-browser-share.png" alt="Device and Browser Share Analytics" width="100%" />
+
+### 📷 QR Code Generation & Sharing
+<img src="screenshots/qr-code-modal.png" alt="QR Code Generation Modal" width="100%" />
+
+### 🌐 Public Stats Page
+<img src="screenshots/public-stats-page.png" alt="Public Stats Dashboard" width="100%" />
+
+### ⚙️ Account Settings & Security
+<img src="screenshots/account-settings.png" alt="Account Settings and Security Panel" width="100%" />
+
+### 🔒 Link Suspended Page
+<img src="screenshots/link-suspended-page.png" alt="Link Suspended Error Page" width="100%" />
+
+### ⏰ Link Expired Page
+<img src="screenshots/link-expired-page.png" alt="Link Expired Error Page" width="100%" />
 
 </div>
 
